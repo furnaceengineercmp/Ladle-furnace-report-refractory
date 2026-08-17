@@ -6,19 +6,29 @@
 <title>Laporan Ladle Furnace</title>
 <style>
   :root{
-    --bg:#170d09; --panel:#2b1a12; --panel2:#3a2419; --border:#5c3a29;
-    --text:#f5f1e6; --muted:#c9ad8f; --accent:#e76814; --accent2:#dc8236;
-    --ok:#dc8236; --warn:#dc8236; --danger:#b8210f; --draft:#e76814; --final:#d8d4bc;
+    --bgTop:#17191b; --bg:#202325; --panel:#2b2e31; --panel2:#383c40; --border:#4a4f54;
+    --text:#f2f1ef; --muted:#a9abad; --accent:#fd7b41; --accent2:#edbf9b; --yellow:#ffc94d;
+    --ok:#edbf9b; --warn:#ffc94d; --danger:#d9573a; --draft:#ffc94d; --final:#edbf9b;
+    --headerBg:rgba(32,35,37,.9);
+  }
+  body[data-theme="light"]{
+    --bgTop:#ffffff; --bg:#f5f4f2; --panel:#ffffff; --panel2:#f0eee9; --border:#ddd9d2;
+    --text:#2b2e30; --muted:#6f7376; --accent:#fd7b41; --accent2:#e2653a; --yellow:#f5b942;
+    --ok:#b5651d; --warn:#c98a12; --danger:#c94a2b; --draft:#c98a12; --final:#b5651d;
+    --headerBg:rgba(255,255,255,.9);
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:linear-gradient(180deg,#120a07,#170d09 300px);color:var(--text);
-    font-family:'Segoe UI',Roboto,Arial,sans-serif;min-height:100vh;padding-bottom:60px;}
+  body{margin:0;background:linear-gradient(180deg,var(--bgTop),var(--bg) 300px);color:var(--text);
+    font-family:'Segoe UI',Roboto,Arial,sans-serif;min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s;}
   header.top{padding:18px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);
-    background:rgba(23,13,9,.9);position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);}
+    background:var(--headerBg);position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);}
   header.top .back{cursor:pointer;background:var(--panel2);border:1px solid var(--border);color:var(--text);
     width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-  header.top h1{font-size:16px;margin:0;flex:1;font-weight:600;letter-spacing:.3px;}
+  .title-wrap{flex:1;min-width:0;}
+  header.top h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.3px;}
   header.top .sub{font-size:12px;color:var(--muted);}
+  .theme-toggle{cursor:pointer;background:var(--panel2);border:1px solid var(--border);color:var(--text);
+    width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
   .wrap{max-width:820px;margin:0 auto;padding:18px 16px 40px;}
   .screen{display:none;}
   .screen.active{display:block;animation:fade .25s ease;}
@@ -28,7 +38,7 @@
   .menu-card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--border);
     border-radius:16px;padding:22px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:16px;}
   .menu-card:hover{border-color:var(--accent);transform:translateY(-2px);}
-  .menu-card .icon{width:52px;height:52px;border-radius:12px;background:rgba(231,104,20,.16);
+  .menu-card .icon{width:52px;height:52px;border-radius:12px;background:color-mix(in srgb, var(--accent) 16%, transparent);
     display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
   .menu-card h3{margin:0 0 4px;font-size:16px;}
   .menu-card p{margin:0;color:var(--muted);font-size:13px;}
@@ -57,7 +67,7 @@
   .readonly{background:rgba(255,255,255,.03);color:var(--muted);}
 
   .btn{cursor:pointer;border:none;border-radius:10px;padding:12px 18px;font-size:14px;font-weight:600;}
-  .btn-primary{background:var(--accent);color:#2b1206;}
+  .btn-primary{background:var(--accent);color:#241400;}
   .btn-primary:hover{background:var(--accent2);}
   .btn-secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
   .btn-secondary:hover{border-color:var(--accent);}
@@ -65,8 +75,8 @@
   .btn-row .btn{flex:1;min-width:150px;}
 
   .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;}
-  .badge.draft{background:rgba(231,104,20,.18);color:var(--draft);}
-  .badge.final{background:rgba(216,212,188,.16);color:var(--final);}
+  .badge.draft{background:color-mix(in srgb, var(--draft) 18%, transparent);color:var(--draft);}
+  .badge.final{background:color-mix(in srgb, var(--final) 16%, transparent);color:var(--final);}
   .status-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
 
   .stat-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
@@ -76,7 +86,7 @@
 
   .chip-row{display:flex;gap:8px;flex-wrap:wrap;}
   .chip{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);cursor:pointer;font-size:13px;}
-  .chip.selected{background:var(--accent);color:#2b1206;border-color:var(--accent);font-weight:600;}
+  .chip.selected{background:var(--accent);color:#241400;border-color:var(--accent);font-weight:600;}
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);
     border:1px solid var(--border);padding:12px 20px;border-radius:12px;font-size:13px;z-index:100;
@@ -101,10 +111,11 @@
 
 <header class="top">
   <div class="back" id="btnBack" onclick="goBack()" style="display:none;">&#8592;</div>
-  <div>
+  <div class="title-wrap">
     <h1 id="screenTitle">Laporan Ladle Furnace</h1>
     <div class="sub" id="screenSub">PT CERIA METALINDO PRIMA</div>
   </div>
+  <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Ganti mode gelap/terang">&#127769;</div>
 </header>
 
 <div class="wrap">
@@ -314,6 +325,7 @@
 
   <!-- ================= SCREEN: RECORD MENU ================= -->
   <section class="screen" id="screen-record-menu">
+    <p class="note-hint last-updated-hint" style="font-size:12.5px;">Memuat info update terakhir...</p>
     <div class="menu-grid">
       <div class="menu-card" onclick="showScreen('record-electrode')">
         <div class="icon">&#9889;</div>
@@ -328,6 +340,7 @@
 
   <!-- ================= SCREEN: RECORD ELECTRODE ================= -->
   <section class="screen" id="screen-record-electrode">
+    <p class="note-hint last-updated-hint" style="font-size:12.5px;">Memuat info update terakhir...</p>
     <div class="card">
       <p class="note-hint" style="font-size:12.5px;">Catatan: 1 elektrode graphite &plusmn; 300 kg.</p>
       <div class="chip-row">
@@ -338,6 +351,7 @@
       <div class="stat-grid" id="electrodeStats" style="display:none;">
         <div class="stat-box"><div class="val" id="e_totalChanges">-</div><div class="lbl">Total Pergantian</div></div>
         <div class="stat-box"><div class="val" id="e_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti</div></div>
+        <div class="stat-box"><div class="val" id="e_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti</div></div>
         <div class="stat-box"><div class="val" id="e_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti</div></div>
         <div class="stat-box"><div class="val" id="e_lastLot">-</div><div class="lbl">LOT Terakhir Ganti</div></div>
       </div>
@@ -346,6 +360,7 @@
 
   <!-- ================= SCREEN: RECORD REFRACTORY ================= -->
   <section class="screen" id="screen-record-refractory">
+    <p class="note-hint last-updated-hint" style="font-size:12.5px;">Memuat info update terakhir...</p>
     <div class="card">
       <label>Pilih Ladle</label>
       <div class="chip-row" id="ladleChipRow"></div>
@@ -367,9 +382,36 @@
       <div class="stat-grid" id="ladleRefractoryStats" style="display:none;">
         <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian</div></div>
         <div class="stat-box"><div class="val" id="lr_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti</div></div>
+        <div class="stat-box"><div class="val" id="lr_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti</div></div>
         <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti</div></div>
         <div class="stat-box"><div class="val" id="lr_lastLot">-</div><div class="lbl">LOT Terakhir Ganti</div></div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Info Umum &mdash; Semua Ladle</h2>
+      <div class="field">
+        <label>Jenis Pergantian</label>
+        <select id="g_jenisRefractory" onchange="loadGlobalRefractoryStats()">
+          <option value="">-- pilih --</option>
+          <option>Pergantian Permeable Brick</option>
+          <option>Pergantian Permeable Seat Brick</option>
+          <option>Slag Relining</option>
+          <option>Side Wall Relining</option>
+          <option>Bottom Relining</option>
+          <option>Relining Total</option>
+        </select>
+      </div>
+      <div class="stat-grid" id="globalRefractoryStats" style="display:none;margin-top:14px;">
+        <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle)</div></div>
+        <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Ladle)</div></div>
+        <div class="stat-box"><div class="val" id="g_lastLot">-</div><div class="lbl">LOT Terakhir (Semua Ladle)</div></div>
+      </div>
+      <div class="stat-grid" id="globalLadleStatus" style="display:none;margin-top:10px;">
+        <div class="stat-box"><div class="val" id="g_inUseList" style="font-size:16px;">-</div><div class="lbl">Ladle Sedang Dipakai</div></div>
+        <div class="stat-box"><div class="val" id="g_readyList" style="font-size:16px;">-</div><div class="lbl">Ladle Ready (Belum Dipakai Lagi Sejak Ganti)</div></div>
+      </div>
+      <p class="note-hint" id="g_noRecordHint" style="margin-top:10px;"></p>
     </div>
   </section>
 
@@ -408,7 +450,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('r_tanggal').valueAsDate = new Date();
   buildLadleChips();
   attachAutosaveListeners();
+  initTheme();
 });
+
+/* ---------------- TEMA GELAP / TERANG ---------------- */
+function initTheme() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem('lf_theme') || 'dark'; } catch (e) {}
+  setTheme(saved);
+}
+function toggleTheme() {
+  const cur = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  setTheme(cur);
+}
+function setTheme(t) {
+  document.body.setAttribute('data-theme', t);
+  document.getElementById('themeToggle').innerHTML = t === 'light' ? '&#9728;&#65039;' : '&#127769;';
+  try { localStorage.setItem('lf_theme', t); } catch (e) {}
+}
 
 /* ---------------- NAVIGASI ---------------- */
 function showScreen(id) {
@@ -439,6 +498,19 @@ function render(id, isBack) {
     document.getElementById('refPwdInput').value = '';
     document.getElementById('refPwdError').style.display = 'none';
   }
+  if (id === 'record-menu' || id === 'record-electrode' || id === 'record-refractory') {
+    loadLastUpdated();
+  }
+}
+
+/* ---------------- INFO UPDATE TERAKHIR (sheet LF refractories) ---------------- */
+async function loadLastUpdated() {
+  const els = document.querySelectorAll('.last-updated-hint');
+  els.forEach(el => el.textContent = 'Memuat info update terakhir...');
+  const res = await apiGet('getRefractoryLastUpdated', {});
+  if (!res) return;
+  const text = res.lastUpdated ? ('Data perbaikan refractory terakhir diupdate: ' + res.lastUpdated) : 'Belum ada data perbaikan refractory.';
+  els.forEach(el => el.textContent = text);
 }
 
 /* ---------------- TOAST ---------------- */
@@ -737,6 +809,7 @@ async function loadElectrodeStats(e) {
   document.getElementById('electrodeStats').style.display = 'grid';
   document.getElementById('e_totalChanges').textContent = res.totalChanges || 0;
   document.getElementById('e_usageSinceLast').textContent = res.usageSinceLast !== '' ? res.usageSinceLast : '-';
+  document.getElementById('e_usagePrevCycle').textContent = res.usagePrevCycle !== '' ? res.usagePrevCycle : '-';
   document.getElementById('e_avgUsage').textContent = res.avgUsage !== '' ? res.avgUsage : '-';
   document.getElementById('e_lastLot').textContent = res.lastLot || '-';
 }
@@ -770,8 +843,31 @@ async function loadLadleRefractoryStats() {
   document.getElementById('ladleRefractoryStats').style.display = 'grid';
   document.getElementById('lr_totalChanges').textContent = res.totalChanges || 0;
   document.getElementById('lr_usageSinceLast').textContent = res.usageSinceLast !== '' ? res.usageSinceLast : '-';
+  document.getElementById('lr_usagePrevCycle').textContent = res.usagePrevCycle !== '' ? res.usagePrevCycle : '-';
   document.getElementById('lr_avgUsage').textContent = res.avgUsage !== '' ? res.avgUsage : '-';
   document.getElementById('lr_lastLot').textContent = res.lastLot || '-';
+}
+
+async function loadGlobalRefractoryStats() {
+  const jr = val('g_jenisRefractory');
+  if (!jr) {
+    document.getElementById('globalRefractoryStats').style.display = 'none';
+    document.getElementById('globalLadleStatus').style.display = 'none';
+    document.getElementById('g_noRecordHint').textContent = '';
+    return;
+  }
+  const res = await apiGet('getRefractoryGlobalStats', { jenisRefractory: jr });
+  if (!res) return;
+  document.getElementById('globalRefractoryStats').style.display = 'grid';
+  document.getElementById('g_totalChanges').textContent = res.totalChanges || 0;
+  document.getElementById('g_avgUsage').textContent = res.avgUsageAll !== '' ? res.avgUsageAll : '-';
+  document.getElementById('g_lastLot').textContent = res.lastLotOverall || '-';
+  document.getElementById('globalLadleStatus').style.display = 'grid';
+  document.getElementById('g_inUseList').textContent = (res.inUseLadles && res.inUseLadles.length) ? res.inUseLadles.join(', ') : '-';
+  document.getElementById('g_readyList').textContent = (res.readyLadles && res.readyLadles.length) ? res.readyLadles.join(', ') : '-';
+  document.getElementById('g_noRecordHint').textContent = (res.noRecordLadles && res.noRecordLadles.length)
+    ? ('Belum ada data perbaikan jenis ini untuk ladle: ' + res.noRecordLadles.join(', '))
+    : '';
 }
 </script>
 </body>
