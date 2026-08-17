@@ -103,6 +103,11 @@
   .modal .btn-row{margin-top:0;}
 
   .note-hint{font-size:11.5px;color:var(--muted);margin-top:6px;}
+  .summary-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px;}
+  .summary-table td{padding:6px 4px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .summary-table tr:last-child td{border-bottom:none;}
+  .summary-table td.lbl2{color:var(--muted);width:42%;white-space:nowrap;}
+  .summary-section{margin-top:12px;margin-bottom:2px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--accent2);font-weight:600;}
   .config-warning{background:rgba(255,93,93,.1);border:1px solid var(--danger);color:#ffb3b3;
     padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;}
 </style>
@@ -154,18 +159,18 @@
     <div class="card">
       <h2>Data Umum</h2>
       <div class="grid cols3">
-        <div class="field"><label>Tanggal</label><input type="date" id="f_tanggal"></div>
+        <div class="field"><label>Tanggal</label><input type="date" id="f_tanggal" oninput="renderSummary()"></div>
         <div class="field"><label>No LOT</label>
           <div style="display:flex;gap:8px;">
-            <input type="text" id="f_noLot" placeholder="mis. 739" style="flex:1;" onkeydown="if(event.key==='Enter')checkLotAndLoad()">
+            <input type="text" id="f_noLot" placeholder="mis. 739" style="flex:1;" oninput="renderSummary()" onkeydown="if(event.key==='Enter')checkLotAndLoad()">
             <button type="button" class="btn btn-secondary" style="padding:10px 14px;white-space:nowrap;" onclick="checkLotAndLoad()">Muat</button>
           </div>
         </div>
-        <div class="field"><label>No Ladle</label><input type="number" id="f_noLadle" placeholder="mis. 6"></div>
+        <div class="field"><label>No Ladle</label><input type="number" id="f_noLadle" placeholder="mis. 6" oninput="renderSummary()"></div>
       </div>
       <div class="grid cols2" style="margin-top:12px;">
-        <div class="field"><label>Temperature Ladle Kosong (&deg;C)</label><input type="number" id="f_tempLadleKosong"></div>
-        <div class="field"><label>Temperature Tapping (&deg;C)</label><input type="number" id="f_tempTapping"></div>
+        <div class="field"><label>Temperature Ladle Kosong (&deg;C)</label><input type="number" id="f_tempLadleKosong" oninput="renderSummary()"></div>
+        <div class="field"><label>Temperature Tapping (&deg;C)</label><input type="number" id="f_tempTapping" oninput="renderSummary()"></div>
       </div>
     </div>
 
@@ -248,10 +253,16 @@
         <div class="stat-box"><div class="val" id="sum_avgRate">-</div><div class="lbl">Avg Heating Rate</div></div>
       </div>
       <div class="grid cols2" style="margin-top:14px;">
-        <div class="field"><label>Power Terpakai (KWh)</label><input type="number" id="f_kwh"></div>
-        <div class="field"><label>N2 Terpakai</label><input type="number" id="f_n2"></div>
+        <div class="field"><label>Power Terpakai (KWh)</label><input type="number" id="f_kwh" oninput="renderSummary()"></div>
+        <div class="field"><label>N2 Terpakai</label><input type="number" id="f_n2" oninput="renderSummary()"></div>
       </div>
-      <div class="field" style="margin-top:12px;"><label>Note</label><textarea id="f_note" placeholder="Catatan tambahan..."></textarea></div>
+      <div class="field" style="margin-top:12px;"><label>Note</label><textarea id="f_note" placeholder="Catatan tambahan..." oninput="renderSummary()"></textarea></div>
+    </div>
+
+    <div class="card" id="summaryCard">
+      <h2>Ringkasan Laporan</h2>
+      <div id="summaryContent"></div>
+      <p class="note-hint" style="margin-top:12px;">&#128247; Laporan ini bisa Bapak/Ibu screenshot sebagai bukti.</p>
     </div>
 
     <div class="btn-row">
@@ -300,8 +311,8 @@
           <label>Jenis Pergantian Refractory</label>
           <select id="r_jenisRefractory">
             <option value="">-- pilih --</option>
-            <option>Pergantian Permeable Brick</option>
-            <option>Pergantian Permeable Seat Brick</option>
+            <option>Permeable Brick</option>
+            <option>Permeable Seat</option>
             <option>Slag Relining</option>
             <option>Side Wall Relining</option>
             <option>Bottom Relining</option>
@@ -371,8 +382,8 @@
         <label>Jenis Pergantian</label>
         <select id="l_jenisRefractory" onchange="loadLadleRefractoryStats()">
           <option value="">-- pilih --</option>
-          <option>Pergantian Permeable Brick</option>
-          <option>Pergantian Permeable Seat Brick</option>
+          <option>Permeable Brick</option>
+          <option>Permeable Seat</option>
           <option>Slag Relining</option>
           <option>Side Wall Relining</option>
           <option>Bottom Relining</option>
@@ -394,8 +405,8 @@
         <label>Jenis Pergantian</label>
         <select id="g_jenisRefractory" onchange="loadGlobalRefractoryStats()">
           <option value="">-- pilih --</option>
-          <option>Pergantian Permeable Brick</option>
-          <option>Pergantian Permeable Seat Brick</option>
+          <option>Permeable Brick</option>
+          <option>Permeable Seat</option>
           <option>Slag Relining</option>
           <option>Side Wall Relining</option>
           <option>Bottom Relining</option>
@@ -451,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildLadleChips();
   attachAutosaveListeners();
   initTheme();
+  renderSummary();
 });
 
 /* ---------------- TEMA GELAP / TERANG ---------------- */
@@ -578,6 +590,7 @@ function recalc() {
   document.getElementById('sum_lastTemp').textContent = lastTemp || '-';
   document.getElementById('sum_totalDur').textContent = totalMin ? formatMinutes(totalMin) : '-';
   document.getElementById('sum_avgRate').textContent = rateCount ? Math.round((rateSum / rateCount) * 100) / 100 : '-';
+  renderSummary();
 }
 function minutesBetween(a, b) {
   const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number);
@@ -621,9 +634,57 @@ async function submitLFReport(finalize) {
 
 function updateStatusBadge(status, revisi) {
   const b = document.getElementById('lfStatusBadge');
-  if (!status) { b.innerHTML = ''; return; }
+  if (!status) { b.innerHTML = ''; renderSummary(); return; }
   const cls = status === 'Final' ? 'final' : 'draft';
   b.innerHTML = '<span class="badge ' + cls + '">' + status.toUpperCase() + (revisi ? ' &middot; ' + revisi : '') + '</span>';
+  renderSummary();
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/** Bangun tampilan ringkasan laporan (sesuai field yang tersimpan di Gsheet), untuk di-screenshot sebagai bukti. */
+function renderSummary() {
+  const el = document.getElementById('summaryContent');
+  if (!el) return;
+  const statusBadge = document.getElementById('lfStatusBadge');
+  const statusText = statusBadge && statusBadge.textContent.trim() ? statusBadge.textContent.trim() : 'Draft (belum dikirim)';
+
+  let batchRows = '';
+  for (let i = 1; i <= 5; i++) {
+    const t = val('b_temp_' + i);
+    const durEl = document.getElementById('b_dur_' + i);
+    const rateEl = document.getElementById('b_rate_' + i);
+    const durTxt = durEl ? durEl.textContent : '-';
+    const rateTxt = rateEl ? rateEl.textContent : '-';
+    if (t === '' && durTxt === '-') continue;
+    batchRows += '<tr><td class="lbl2">Batch ' + i + '</td><td>' +
+      (durTxt !== '-' ? durTxt + ' min' : '-') + ' &middot; ' +
+      (t !== '' ? escapeHtml(t) + '&deg;C' : '-') + ' &middot; ' +
+      (rateTxt !== '-' ? rateTxt + ' &deg;C/min' : '-') + '</td></tr>';
+  }
+  if (!batchRows) batchRows = '<tr><td class="lbl2">Batch</td><td>Belum ada data batch</td></tr>';
+
+  el.innerHTML =
+    '<table class="summary-table">' +
+      '<tr><td class="lbl2">Tanggal</td><td>' + escapeHtml(val('f_tanggal') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">No LOT</td><td>' + escapeHtml(val('f_noLot') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">No Ladle</td><td>' + escapeHtml(val('f_noLadle') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">Temp Ladle Kosong</td><td>' + (val('f_tempLadleKosong') ? escapeHtml(val('f_tempLadleKosong')) + '&deg;C' : '-') + '</td></tr>' +
+      '<tr><td class="lbl2">Temp Tapping</td><td>' + (val('f_tempTapping') ? escapeHtml(val('f_tempTapping')) + '&deg;C' : '-') + '</td></tr>' +
+    '</table>' +
+    '<div class="summary-section">Heating per Batch</div>' +
+    '<table class="summary-table">' + batchRows + '</table>' +
+    '<table class="summary-table">' +
+      '<tr><td class="lbl2">Last Temperature</td><td>' + document.getElementById('sum_lastTemp').textContent + '</td></tr>' +
+      '<tr><td class="lbl2">Total Duration</td><td>' + document.getElementById('sum_totalDur').textContent + '</td></tr>' +
+      '<tr><td class="lbl2">Avg Heating Rate</td><td>' + document.getElementById('sum_avgRate').textContent + '</td></tr>' +
+      '<tr><td class="lbl2">Power (KWh)</td><td>' + escapeHtml(val('f_kwh') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">N2 Terpakai</td><td>' + escapeHtml(val('f_n2') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">Note</td><td>' + escapeHtml(val('f_note') || '-') + '</td></tr>' +
+      '<tr><td class="lbl2">Status</td><td>' + escapeHtml(statusText) + '</td></tr>' +
+    '</table>';
 }
 
 function resetLFForm(keepLot) {
@@ -644,6 +705,7 @@ function resetLFForm(keepLot) {
   updateStatusBadge(null);
   document.getElementById('lfLotHint').textContent = '';
   currentLotData = null;
+  renderSummary();
 }
 
 function fillLFForm(d) {
