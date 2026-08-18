@@ -108,6 +108,9 @@
   .summary-table tr:last-child td{border-bottom:none;}
   .summary-table td.lbl2{color:var(--muted);width:42%;white-space:nowrap;}
   .summary-section{margin-top:12px;margin-bottom:2px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--accent2);font-weight:600;}
+  .zh{display:block;font-size:.82em;opacity:.7;font-weight:400;letter-spacing:0;text-transform:none;}
+  h3 .zh, .menu-card p .zh{display:inline;}
+  .menu-card p .zh{margin-left:4px;}
   .config-warning{background:rgba(255,93,93,.1);border:1px solid var(--danger);color:#ffb3b3;
     padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;}
 </style>
@@ -249,7 +252,7 @@
       <h2>Ringkasan &amp; Konsumsi</h2>
       <div class="stat-grid">
         <div class="stat-box"><div class="val" id="sum_lastTemp">-</div><div class="lbl">Last Temperature</div></div>
-        <div class="stat-box"><div class="val" id="sum_totalDur">-</div><div class="lbl">Total Duration</div></div>
+        <div class="stat-box"><div class="val" id="sum_totalDur">-</div><div class="lbl">Total Duration (menit)</div></div>
         <div class="stat-box"><div class="val" id="sum_avgRate">-</div><div class="lbl">Avg Heating Rate</div></div>
       </div>
       <div class="grid cols2" style="margin-top:14px;">
@@ -262,7 +265,10 @@
     <div class="card" id="summaryCard">
       <h2>Ringkasan Laporan</h2>
       <div id="summaryContent"></div>
-      <p class="note-hint" style="margin-top:12px;">&#128247; Laporan ini bisa Bapak/Ibu screenshot sebagai bukti.</p>
+      <div class="btn-row" style="margin-top:12px;">
+        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="copySummary()">&#128203; Salin Laporan</button>
+      </div>
+      <p class="note-hint" style="margin-top:10px;">&#128247; Laporan ini bisa Bapak/Ibu screenshot sebagai bukti.</p>
     </div>
 
     <div class="btn-row">
@@ -340,11 +346,11 @@
     <div class="menu-grid">
       <div class="menu-card" onclick="showScreen('record-electrode')">
         <div class="icon">&#9889;</div>
-        <div><h3>Record Elektrode</h3><p>Riwayat &amp; statistik pergantian elektrode A/B/C</p></div>
+        <div><h3>Record Elektrode<span class="zh">电极记录</span></h3><p>Riwayat &amp; statistik pergantian elektrode A/B/C<span class="zh">A/B/C电极更换的历史记录与统计</span></p></div>
       </div>
       <div class="menu-card" onclick="showScreen('record-refractory')">
         <div class="icon">&#129521;</div>
-        <div><h3>Record Refractory</h3><p>Riwayat &amp; statistik pergantian refractory per ladle</p></div>
+        <div><h3>Record Refractory<span class="zh">耐火材料记录</span></h3><p>Riwayat &amp; statistik pergantian refractory per ladle<span class="zh">每个钢包耐火材料更换的历史记录与统计</span></p></div>
       </div>
     </div>
   </section>
@@ -353,18 +359,18 @@
   <section class="screen" id="screen-record-electrode">
     <p class="note-hint last-updated-hint" style="font-size:12.5px;">Memuat info update terakhir...</p>
     <div class="card">
-      <p class="note-hint" style="font-size:12.5px;">Catatan: 1 elektrode graphite &plusmn; 300 kg.</p>
+      <p class="note-hint" style="font-size:12.5px;">Catatan: 1 elektrode graphite &plusmn; 300 kg.<span class="zh">备注：1根石墨电极约300公斤</span></p>
       <div class="chip-row">
-        <div class="chip" onclick="loadElectrodeStats('A')">Elektrode A</div>
-        <div class="chip" onclick="loadElectrodeStats('B')">Elektrode B</div>
-        <div class="chip" onclick="loadElectrodeStats('C')">Elektrode C</div>
+        <div class="chip" onclick="loadElectrodeStats('A')">Elektrode A <span class="zh" style="display:inline;">A电极</span></div>
+        <div class="chip" onclick="loadElectrodeStats('B')">Elektrode B <span class="zh" style="display:inline;">B电极</span></div>
+        <div class="chip" onclick="loadElectrodeStats('C')">Elektrode C <span class="zh" style="display:inline;">C电极</span></div>
       </div>
       <div class="stat-grid" id="electrodeStats" style="display:none;">
-        <div class="stat-box"><div class="val" id="e_totalChanges">-</div><div class="lbl">Total Pergantian</div></div>
-        <div class="stat-box"><div class="val" id="e_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti</div></div>
-        <div class="stat-box"><div class="val" id="e_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti</div></div>
-        <div class="stat-box"><div class="val" id="e_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti</div></div>
-        <div class="stat-box"><div class="val" id="e_lastLot">-</div><div class="lbl">LOT Terakhir Ganti</div></div>
+        <div class="stat-box"><div class="val" id="e_totalChanges">-</div><div class="lbl">Total Pergantian<span class="zh">更换总次数</span></div></div>
+        <div class="stat-box"><div class="val" id="e_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti<span class="zh">上次更换后的使用次数</span></div></div>
+        <div class="stat-box"><div class="val" id="e_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti<span class="zh">更换前一周期的使用次数</span></div></div>
+        <div class="stat-box"><div class="val" id="e_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti<span class="zh">平均使用次数/更换</span></div></div>
+        <div class="stat-box"><div class="val" id="e_lastLot">-</div><div class="lbl">LOT Terakhir Ganti<span class="zh">最后更换批号(LOT)</span></div></div>
       </div>
     </div>
   </section>
@@ -373,13 +379,13 @@
   <section class="screen" id="screen-record-refractory">
     <p class="note-hint last-updated-hint" style="font-size:12.5px;">Memuat info update terakhir...</p>
     <div class="card">
-      <label>Pilih Ladle</label>
+      <label>Pilih Ladle <span class="zh" style="display:inline;">选择钢包</span></label>
       <div class="chip-row" id="ladleChipRow"></div>
       <div class="stat-grid" id="ladleUsageStats" style="display:none;">
-        <div class="stat-box"><div class="val" id="l_totalUsage">-</div><div class="lbl">Total Pemakaian LF (ladle ini)</div></div>
+        <div class="stat-box"><div class="val" id="l_totalUsage">-</div><div class="lbl">Total Pemakaian LF (ladle ini)<span class="zh">LF使用总次数（此钢包）</span></div></div>
       </div>
       <div class="field" style="margin-top:16px;display:none;" id="ladleJenisField">
-        <label>Jenis Pergantian</label>
+        <label>Jenis Pergantian <span class="zh" style="display:inline;">更换类型</span></label>
         <select id="l_jenisRefractory" onchange="loadLadleRefractoryStats()">
           <option value="">-- pilih --</option>
           <option>Permeable Brick</option>
@@ -391,18 +397,18 @@
         </select>
       </div>
       <div class="stat-grid" id="ladleRefractoryStats" style="display:none;">
-        <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian</div></div>
-        <div class="stat-box"><div class="val" id="lr_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti</div></div>
-        <div class="stat-box"><div class="val" id="lr_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti</div></div>
-        <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti</div></div>
-        <div class="stat-box"><div class="val" id="lr_lastLot">-</div><div class="lbl">LOT Terakhir Ganti</div></div>
+        <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian<span class="zh">更换总次数</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti<span class="zh">上次更换后的使用次数</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti<span class="zh">更换前一周期的使用次数</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti<span class="zh">平均使用次数/更换</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_lastLot">-</div><div class="lbl">LOT Terakhir Ganti<span class="zh">最后更换批号(LOT)</span></div></div>
       </div>
     </div>
 
     <div class="card">
-      <h2>Info Umum &mdash; Semua Ladle</h2>
+      <h2>Info Umum &mdash; Semua Ladle <span class="zh" style="display:inline;">总体信息 — 所有钢包</span></h2>
       <div class="field">
-        <label>Jenis Pergantian</label>
+        <label>Jenis Pergantian <span class="zh" style="display:inline;">更换类型</span></label>
         <select id="g_jenisRefractory" onchange="loadGlobalRefractoryStats()">
           <option value="">-- pilih --</option>
           <option>Permeable Brick</option>
@@ -414,13 +420,13 @@
         </select>
       </div>
       <div class="stat-grid" id="globalRefractoryStats" style="display:none;margin-top:14px;">
-        <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle)</div></div>
-        <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Ladle)</div></div>
-        <div class="stat-box"><div class="val" id="g_lastLot">-</div><div class="lbl">LOT Terakhir (Semua Ladle)</div></div>
+        <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle)<span class="zh">更换总次数（所有钢包）</span></div></div>
+        <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Ladle)<span class="zh">平均使用次数/更换（所有钢包）</span></div></div>
+        <div class="stat-box"><div class="val" id="g_lastLot">-</div><div class="lbl">LOT Terakhir (Semua Ladle)<span class="zh">最后批号(LOT)（所有钢包）</span></div></div>
       </div>
       <div class="stat-grid" id="globalLadleStatus" style="display:none;margin-top:10px;">
-        <div class="stat-box"><div class="val" id="g_inUseList" style="font-size:16px;">-</div><div class="lbl">Ladle Sedang Dipakai</div></div>
-        <div class="stat-box"><div class="val" id="g_readyList" style="font-size:16px;">-</div><div class="lbl">Ladle Ready (Belum Dipakai Lagi Sejak Ganti)</div></div>
+        <div class="stat-box"><div class="val" id="g_inUseList" style="font-size:16px;">-</div><div class="lbl">Ladle Sedang Dipakai<span class="zh">正在使用的钢包</span></div></div>
+        <div class="stat-box"><div class="val" id="g_readyList" style="font-size:16px;">-</div><div class="lbl">Ladle Ready (Belum Dipakai Lagi Sejak Ganti)<span class="zh">备用钢包（更换后尚未再使用）</span></div></div>
       </div>
       <p class="note-hint" id="g_noRecordHint" style="margin-top:10px;"></p>
     </div>
@@ -500,9 +506,9 @@ function render(id, isBack) {
     'lf-form': ['Input Laporan LF', 'Log Sheet Ladle Furnace'],
     'refractory-password': ['Input Perbaikan Refractory', 'Autentikasi diperlukan'],
     'refractory-form': ['Input Perbaikan Refractory', 'Elektrode & Refractory'],
-    'record-menu': ['Record Perbaikan Refractory', 'Pilih jenis record'],
-    'record-electrode': ['Record Elektrode', 'Statistik pergantian elektrode'],
-    'record-refractory': ['Record Refractory', 'Statistik pergantian refractory']
+    'record-menu': ['Record Perbaikan Refractory / 耐火材料维修记录', 'Pilih jenis record / 选择记录类型'],
+    'record-electrode': ['Record Elektrode / 电极记录', 'Statistik pergantian elektrode / 电极更换统计'],
+    'record-refractory': ['Record Refractory / 耐火材料记录', 'Statistik pergantian refractory / 耐火材料更换统计']
   };
   document.getElementById('screenTitle').textContent = titles[id][0];
   document.getElementById('screenSub').textContent = titles[id][1];
@@ -521,7 +527,9 @@ async function loadLastUpdated() {
   els.forEach(el => el.textContent = 'Memuat info update terakhir...');
   const res = await apiGet('getRefractoryLastUpdated', {});
   if (!res) return;
-  const text = res.lastUpdated ? ('Data perbaikan refractory terakhir diupdate: ' + res.lastUpdated) : 'Belum ada data perbaikan refractory.';
+  const text = res.lastUpdated
+    ? ('Data perbaikan refractory terakhir diupdate: ' + res.lastUpdated + ' / 耐火材料维修数据最后更新时间：' + res.lastUpdated)
+    : 'Belum ada data perbaikan refractory. / 尚无耐火材料维修数据。';
   els.forEach(el => el.textContent = text);
 }
 
@@ -588,7 +596,7 @@ function recalc() {
     if (temp !== '') { lastTemp = Number(temp); prevTemp = Number(temp); }
   }
   document.getElementById('sum_lastTemp').textContent = lastTemp || '-';
-  document.getElementById('sum_totalDur').textContent = totalMin ? formatMinutes(totalMin) : '-';
+  document.getElementById('sum_totalDur').textContent = totalMin ? totalMin : '-';
   document.getElementById('sum_avgRate').textContent = rateCount ? Math.round((rateSum / rateCount) * 100) / 100 : '-';
   renderSummary();
 }
@@ -678,13 +686,73 @@ function renderSummary() {
     '<table class="summary-table">' + batchRows + '</table>' +
     '<table class="summary-table">' +
       '<tr><td class="lbl2">Last Temperature</td><td>' + document.getElementById('sum_lastTemp').textContent + '</td></tr>' +
-      '<tr><td class="lbl2">Total Duration</td><td>' + document.getElementById('sum_totalDur').textContent + '</td></tr>' +
+      '<tr><td class="lbl2">Total Duration</td><td>' + document.getElementById('sum_totalDur').textContent + (document.getElementById('sum_totalDur').textContent !== '-' ? ' menit' : '') + '</td></tr>' +
       '<tr><td class="lbl2">Avg Heating Rate</td><td>' + document.getElementById('sum_avgRate').textContent + '</td></tr>' +
       '<tr><td class="lbl2">Power (KWh)</td><td>' + escapeHtml(val('f_kwh') || '-') + '</td></tr>' +
       '<tr><td class="lbl2">N2 Terpakai</td><td>' + escapeHtml(val('f_n2') || '-') + '</td></tr>' +
       '<tr><td class="lbl2">Note</td><td>' + escapeHtml(val('f_note') || '-') + '</td></tr>' +
       '<tr><td class="lbl2">Status</td><td>' + escapeHtml(statusText) + '</td></tr>' +
     '</table>';
+}
+
+/** Bangun versi teks polos dari ringkasan (untuk disalin ke clipboard) - hindari HTML tags. */
+function buildSummaryPlainText() {
+  const statusBadge = document.getElementById('lfStatusBadge');
+  const statusText = statusBadge && statusBadge.textContent.trim() ? statusBadge.textContent.trim() : 'Draft (belum dikirim)';
+  const lines = [];
+  lines.push('LAPORAN LADLE FURNACE');
+  lines.push('Tanggal: ' + (val('f_tanggal') || '-'));
+  lines.push('No LOT: ' + (val('f_noLot') || '-'));
+  lines.push('No Ladle: ' + (val('f_noLadle') || '-'));
+  lines.push('Temp Ladle Kosong: ' + (val('f_tempLadleKosong') ? val('f_tempLadleKosong') + ' C' : '-'));
+  lines.push('Temp Tapping: ' + (val('f_tempTapping') ? val('f_tempTapping') + ' C' : '-'));
+  lines.push('');
+  lines.push('Heating per Batch:');
+  let anyBatch = false;
+  for (let i = 1; i <= 5; i++) {
+    const t = val('b_temp_' + i);
+    const durEl = document.getElementById('b_dur_' + i);
+    const rateEl = document.getElementById('b_rate_' + i);
+    const durTxt = durEl ? durEl.textContent : '-';
+    const rateTxt = rateEl ? rateEl.textContent : '-';
+    if (t === '' && durTxt === '-') continue;
+    anyBatch = true;
+    lines.push('  Batch ' + i + ': ' + (durTxt !== '-' ? durTxt + ' min' : '-') + ' | ' + (t !== '' ? t + ' C' : '-') + ' | ' + (rateTxt !== '-' ? rateTxt + ' C/min' : '-'));
+  }
+  if (!anyBatch) lines.push('  Belum ada data batch');
+  lines.push('');
+  const totalDurTxt = document.getElementById('sum_totalDur').textContent;
+  lines.push('Last Temperature: ' + document.getElementById('sum_lastTemp').textContent);
+  lines.push('Total Duration: ' + totalDurTxt + (totalDurTxt !== '-' ? ' menit' : ''));
+  lines.push('Avg Heating Rate: ' + document.getElementById('sum_avgRate').textContent);
+  lines.push('Power (KWh): ' + (val('f_kwh') || '-'));
+  lines.push('N2 Terpakai: ' + (val('f_n2') || '-'));
+  lines.push('Note: ' + (val('f_note') || '-'));
+  lines.push('Status: ' + statusText);
+  return lines.join('\n');
+}
+
+async function copySummary() {
+  const text = buildSummaryPlainText();
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('Ringkasan laporan disalin', 'ok');
+  } catch (e) {
+    // fallback untuk browser/koneksi yang tidak mendukung Clipboard API
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('Ringkasan laporan disalin', 'ok');
+    } catch (e2) {
+      toast('Gagal menyalin, coba screenshot saja', 'err');
+    }
+  }
 }
 
 function resetLFForm(keepLot) {
@@ -928,7 +996,7 @@ async function loadGlobalRefractoryStats() {
   document.getElementById('g_inUseList').textContent = (res.inUseLadles && res.inUseLadles.length) ? res.inUseLadles.join(', ') : '-';
   document.getElementById('g_readyList').textContent = (res.readyLadles && res.readyLadles.length) ? res.readyLadles.join(', ') : '-';
   document.getElementById('g_noRecordHint').textContent = (res.noRecordLadles && res.noRecordLadles.length)
-    ? ('Belum ada data perbaikan jenis ini untuk ladle: ' + res.noRecordLadles.join(', '))
+    ? ('Belum ada data perbaikan jenis ini untuk ladle: ' + res.noRecordLadles.join(', ') + ' / 以下钢包尚无此类型的维修数据：' + res.noRecordLadles.join(', '))
     : '';
 }
 </script>
