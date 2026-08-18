@@ -314,16 +314,15 @@
 
       <div id="blockRefractory" style="display:none;margin-top:14px;">
         <div class="field">
-          <label>Jenis Pergantian Refractory</label>
-          <select id="r_jenisRefractory">
-            <option value="">-- pilih --</option>
-            <option>Permeable Brick</option>
-            <option>Permeable Seat</option>
-            <option>Slag Relining</option>
-            <option>Side Wall Relining</option>
-            <option>Bottom Relining</option>
-            <option>Relining Total</option>
-          </select>
+          <label>Jenis Pergantian Refractory (bisa pilih lebih dari 1)</label>
+          <div class="chip-row" id="refractoryTypeChipRow">
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Permeable Brick')" id="chip_refr_Permeable_Brick">Permeable Brick</div>
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Permeable Seat')" id="chip_refr_Permeable_Seat">Permeable Seat</div>
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Slag Relining')" id="chip_refr_Slag_Relining">Slag Relining</div>
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Side Wall Relining')" id="chip_refr_Side_Wall_Relining">Side Wall Relining</div>
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Bottom Relining')" id="chip_refr_Bottom_Relining">Bottom Relining</div>
+            <div class="chip refr-chip" onclick="toggleRefractoryType('Relining Total')" id="chip_refr_Relining_Total">Relining Total</div>
+          </div>
         </div>
         <div class="field" style="margin-top:12px;"><label>Ladle Nomor</label><input type="number" id="r_ladleNo" min="1" max="8"></div>
       </div>
@@ -456,6 +455,7 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfS7qP85WbZyxrgsMV
 let history = ["menu"];
 let selectedJenis = null;
 let selectedElectrodes = [];
+let selectedRefractoryTypes = [];
 let editModalResolve = null;
 let currentLotData = null; // data existing yg terakhir dimuat untuk LOT saat ini
 let autosaveTimer = null;
@@ -887,16 +887,26 @@ function toggleElectrode(e) {
     chip.classList.add('selected');
   }
 }
+function toggleRefractoryType(type) {
+  const chip = document.getElementById('chip_refr_' + type.replace(/ /g, '_'));
+  if (selectedRefractoryTypes.includes(type)) {
+    selectedRefractoryTypes = selectedRefractoryTypes.filter(x => x !== type);
+    chip.classList.remove('selected');
+  } else {
+    selectedRefractoryTypes.push(type);
+    chip.classList.add('selected');
+  }
+}
 function resetRefractoryForm() {
   document.getElementById('r_tanggal').valueAsDate = new Date();
   setVal('r_lastLot', ''); setVal('r_ladleNo', ''); setVal('r_note', ''); setVal('r_noteKhusus', '');
-  setVal('r_jenisRefractory', '');
-  selectedJenis = null; selectedElectrodes = [];
+  selectedJenis = null; selectedElectrodes = []; selectedRefractoryTypes = [];
   document.getElementById('chip_elektrode').classList.remove('selected');
   document.getElementById('chip_refractory').classList.remove('selected');
   document.getElementById('blockElektrode').style.display = 'none';
   document.getElementById('blockRefractory').style.display = 'none';
   document.querySelectorAll('.elec-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.refr-chip').forEach(c => c.classList.remove('selected'));
 }
 
 async function submitRefractoryForm() {
@@ -908,10 +918,9 @@ async function submitRefractoryForm() {
     if (!selectedElectrodes.length) { toast('Pilih minimal 1 elektrode', 'err'); return; }
     details = selectedElectrodes;
   } else {
-    const jr = val('r_jenisRefractory');
-    if (!jr) { toast('Pilih jenis pergantian refractory', 'err'); return; }
+    if (!selectedRefractoryTypes.length) { toast('Pilih minimal 1 jenis pergantian refractory', 'err'); return; }
     if (!val('r_ladleNo')) { toast('Isi No Ladle', 'err'); return; }
-    details = [jr];
+    details = selectedRefractoryTypes;
     ladleNo = val('r_ladleNo');
   }
   const payload = {
