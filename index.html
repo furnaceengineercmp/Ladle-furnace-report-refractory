@@ -372,6 +372,15 @@
         <div class="stat-box"><div class="val" id="e_lastLot">-</div><div class="lbl">LOT Terakhir Ganti<span class="zh">最后更换批号(LOT)</span></div></div>
       </div>
     </div>
+
+    <div class="card">
+      <h2>Info Umum &mdash; Semua Elektrode <span class="zh" style="display:inline;">总体信息 — 所有电极</span></h2>
+      <div class="stat-grid" id="electrodeGlobalStats">
+        <div class="stat-box"><div class="val" id="eg_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Elektrode)<span class="zh">更换总次数（所有电极）</span></div></div>
+        <div class="stat-box"><div class="val" id="eg_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Elektrode)<span class="zh">平均使用次数/更换（所有电极）</span></div></div>
+        <div class="stat-box"><div class="val" id="eg_lastLot">-</div><div class="lbl">LOT Terakhir Ganti (Semua Elektrode)<span class="zh">最后更换批号(LOT)（所有电极）</span></div></div>
+      </div>
+    </div>
   </section>
 
   <!-- ================= SCREEN: RECORD REFRACTORY ================= -->
@@ -518,6 +527,9 @@ function render(id, isBack) {
   }
   if (id === 'record-menu' || id === 'record-electrode' || id === 'record-refractory') {
     loadLastUpdated();
+  }
+  if (id === 'record-electrode') {
+    loadElectrodeGlobalStats();
   }
 }
 
@@ -951,6 +963,14 @@ async function loadElectrodeStats(e) {
   document.getElementById('e_usagePrevCycle').textContent = res.usagePrevCycle !== '' ? res.usagePrevCycle : '-';
   document.getElementById('e_avgUsage').textContent = res.avgUsage !== '' ? res.avgUsage : '-';
   document.getElementById('e_lastLot').textContent = res.lastLot || '-';
+}
+
+async function loadElectrodeGlobalStats() {
+  const res = await apiGet('getElectrodeGlobalStats', {});
+  if (!res) return;
+  document.getElementById('eg_totalChanges').textContent = res.totalChanges || 0;
+  document.getElementById('eg_avgUsage').textContent = res.avgUsageAll !== '' ? res.avgUsageAll : '-';
+  document.getElementById('eg_lastLot').textContent = res.lastLotOverall || '-';
 }
 
 function buildLadleChips() {
