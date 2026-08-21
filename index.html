@@ -158,6 +158,9 @@
       <div id="lfStatusBadge"></div>
       <div class="note-hint" id="lfLotHint"></div>
     </div>
+    <div id="viewOnlyBanner" style="display:none;background:color-mix(in srgb, var(--accent) 16%, transparent);border:1px solid var(--accent);color:var(--accent2);padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;">
+      &#128065; Mode Lihat Saja &mdash; laporan ini tidak bisa diubah. Ganti No LOT di atas untuk melihat/mengedit laporan lain.
+    </div>
 
     <div class="card">
       <h2>Data Umum</h2>
@@ -272,8 +275,8 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="submitLFReport(false)">Simpan Draft</button>
-      <button class="btn btn-primary" onclick="submitLFReport(true)">Kirim Laporan</button>
+      <button class="btn btn-secondary" id="btnSimpanDraft" onclick="submitLFReport(false)">Simpan Draft</button>
+      <button class="btn btn-primary" id="btnKirimLaporan" onclick="submitLFReport(true)">Kirim Laporan</button>
     </div>
   </section>
 
@@ -448,9 +451,10 @@
   <div class="modal">
     <h3>Data sudah ada</h3>
     <p id="editModalText">No LOT ini sudah memiliki laporan Final. Apakah Anda ingin mengedit laporan tersebut?</p>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeEditModal(false)">Batal</button>
-      <button class="btn btn-primary" onclick="closeEditModal(true)">Edit</button>
+    <div class="btn-row" style="flex-direction:column;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeEditModal('view')">&#128065; Lihat Saja (tidak bisa diedit)</button>
+      <button class="btn btn-primary" style="width:100%;" onclick="closeEditModal('edit')">Edit Laporan</button>
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeEditModal('cancel')">Batal</button>
     </div>
   </div>
 </div>
@@ -510,6 +514,9 @@ function render(id, isBack) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
   document.getElementById('btnBack').style.display = id === 'menu' ? 'none' : 'flex';
+  if (id === 'lf-form' && !isBack) {
+    setFormReadOnly(false); // selalu mulai dalam mode bisa-edit saat masuk layar ini dari menu
+  }
   const titles = {
     'menu': ['Laporan Ladle Furnace', 'PT CERIA METALINDO PRIMA'],
     'lf-form': ['Input Laporan LF', 'Log Sheet Ladle Furnace'],
@@ -686,6 +693,8 @@ function renderSummary() {
   }
   if (!batchRows) batchRows = '<tr><td class="lbl2">Batch</td><td>Belum ada data batch</td></tr>';
 
+  const totals = totalFeeding();
+
   el.innerHTML =
     '<table class="summary-table">' +
       '<tr><td class="lbl2">Tanggal</td><td>' + escapeHtml(val('f_tanggal') || '-') + '</td></tr>' +
@@ -696,6 +705,11 @@ function renderSummary() {
     '</table>' +
     '<div class="summary-section">Heating per Batch</div>' +
     '<table class="summary-table">' + batchRows + '</table>' +
+    '<div class="summary-section">Penambahan Material</div>' +
+    '<table class="summary-table">' +
+      '<tr><td class="lbl2">Total CaO</td><td>' + (totals.cao ? totals.cao + ' kg' : '-') + '</td></tr>' +
+      '<tr><td class="lbl2">Total CaF2</td><td>' + (totals.caf2 ? totals.caf2 + ' kg' : '-') + '</td></tr>' +
+    '</table>' +
     '<table class="summary-table">' +
       '<tr><td class="lbl2">Last Temperature</td><td>' + document.getElementById('sum_lastTemp').textContent + '</td></tr>' +
       '<tr><td class="lbl2">Total Duration</td><td>' + document.getElementById('sum_totalDur').textContent + (document.getElementById('sum_totalDur').textContent !== '-' ? ' menit' : '') + '</td></tr>' +
@@ -705,6 +719,16 @@ function renderSummary() {
       '<tr><td class="lbl2">Note</td><td>' + escapeHtml(val('f_note') || '-') + '</td></tr>' +
       '<tr><td class="lbl2">Status</td><td>' + escapeHtml(statusText) + '</td></tr>' +
     '</table>';
+}
+
+/** Jumlahkan feeding CaO / CaF2 dari Sebelum Mulai + Batch 1-5. */
+function totalFeeding() {
+  let cao = 0, caf2 = 0;
+  for (let i = 0; i <= 5; i++) {
+    cao += Number(val('b_cao_' + i)) || 0;
+    caf2 += Number(val('b_caf2_' + i)) || 0;
+  }
+  return { cao: cao || 0, caf2: caf2 || 0 };
 }
 
 /** Bangun versi teks polos dari ringkasan (untuk disalin ke clipboard) - hindari HTML tags. */
@@ -732,6 +756,10 @@ function buildSummaryPlainText() {
     lines.push('  Batch ' + i + ': ' + (durTxt !== '-' ? durTxt + ' min' : '-') + ' | ' + (t !== '' ? t + ' C' : '-') + ' | ' + (rateTxt !== '-' ? rateTxt + ' C/min' : '-'));
   }
   if (!anyBatch) lines.push('  Belum ada data batch');
+  lines.push('');
+  const totals = totalFeeding();
+  lines.push('Total CaO: ' + (totals.cao ? totals.cao + ' kg' : '-'));
+  lines.push('Total CaF2: ' + (totals.caf2 ? totals.caf2 + ' kg' : '-'));
   lines.push('');
   const totalDurTxt = document.getElementById('sum_totalDur').textContent;
   lines.push('Last Temperature: ' + document.getElementById('sum_lastTemp').textContent);
@@ -800,6 +828,8 @@ function fillLFForm(d) {
   setVal('b_temp_0', d['Temp Sebelum Mulai (C)'] !== '' && d['Temp Sebelum Mulai (C)'] !== undefined ? d['Temp Sebelum Mulai (C)'] : 1453);
   for (let i = 1; i <= 5; i++) {
     setVal('b_temp_' + i, d['Temperatur-' + i]);
+    setVal('b_start_' + i, d['Heating Start-' + i]);
+    setVal('b_stop_' + i, d['Heating Finish-' + i]);
   }
   setVal('f_kwh', d['KWH Consume']);
   setVal('f_n2', d['Nitrogen Consume']);
@@ -817,20 +847,27 @@ async function checkLotAndLoad() {
     currentLotData = res;
     if (res.Status === 'Final') {
       document.getElementById('lfLotHint').textContent = 'No LOT ini sudah ada (Final).';
-      const doEdit = await askEditConfirm('No LOT ini sudah memiliki laporan Final' + (res.Revisi ? ' (' + res.Revisi + ')' : '') + '. Apakah Anda ingin mengedit laporan tersebut?');
-      if (doEdit) {
+      const choice = await askEditConfirm('No LOT ini sudah memiliki laporan Final' + (res.Revisi ? ' (' + res.Revisi + ')' : '') + '. Apakah Anda ingin mengedit laporan tersebut, hanya melihat saja, atau batal?');
+      if (choice === 'edit') {
+        setFormReadOnly(false);
         fillLFForm(res);
         toast('Data dimuat untuk diedit', 'ok');
+      } else if (choice === 'view') {
+        setFormReadOnly(true);
+        fillLFForm(res);
+        toast('Menampilkan laporan (mode lihat saja)', 'ok');
       } else {
         setVal('f_noLot', '');
         currentLotData = null;
       }
     } else {
       // draft -> muat otomatis tanpa konfirmasi (melanjutkan draft yang belum selesai)
+      setFormReadOnly(false);
       fillLFForm(res);
       document.getElementById('lfLotHint').textContent = 'Draft sebelumnya dimuat otomatis.';
     }
   } else {
+    setFormReadOnly(false);
     resetLFForm(true); // No LOT baru -> kosongkan semua isian di bawahnya
     document.getElementById('lfLotHint').textContent = 'No LOT baru.';
   }
@@ -844,6 +881,22 @@ function askEditConfirm(text) {
 function closeEditModal(result) {
   document.getElementById('editModal').classList.remove('show');
   if (editModalResolve) editModalResolve(result);
+}
+
+/** Mode "Lihat Saja": semua field dikunci kecuali No LOT (supaya bisa pindah lihat LOT lain), tombol simpan/kirim dinonaktifkan. */
+function setFormReadOnly(readOnly) {
+  const form = document.getElementById('screen-lf-form');
+  if (!form) return;
+  form.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.id === 'f_noLot') return;
+    el.disabled = readOnly;
+  });
+  const btnDraft = document.getElementById('btnSimpanDraft');
+  const btnKirim = document.getElementById('btnKirimLaporan');
+  if (btnDraft) btnDraft.disabled = readOnly;
+  if (btnKirim) btnKirim.disabled = readOnly;
+  const banner = document.getElementById('viewOnlyBanner');
+  if (banner) banner.style.display = readOnly ? 'block' : 'none';
 }
 
 /* autosave draft setiap perubahan field (debounced), hanya jika No LOT sudah diisi */
