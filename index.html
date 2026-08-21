@@ -565,15 +565,16 @@ async function apiGet(action, params) {
   if (!WEB_APP_URL) { toast('URL Web App belum diisi', 'err'); return null; }
   let qs = '?action=' + encodeURIComponent(action);
   for (const k in (params || {})) qs += '&' + k + '=' + encodeURIComponent(params[k]);
+  qs += '&_ts=' + Date.now(); // cache-busting - cegah browser/CDN menyajikan respons GET lama
   try {
-    const res = await fetch(WEB_APP_URL + qs);
+    const res = await fetch(WEB_APP_URL + qs, { cache: 'no-store' });
     return await res.json();
   } catch (e) { toast('Gagal terhubung ke server', 'err'); return null; }
 }
 async function apiPost(payload) {
   if (!WEB_APP_URL) { toast('URL Web App belum diisi', 'err'); return null; }
   try {
-    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload), cache: 'no-store' });
     return await res.json();
   } catch (e) { toast('Gagal mengirim data', 'err'); return null; }
 }
