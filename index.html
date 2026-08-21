@@ -835,7 +835,26 @@ function fillLFForm(d) {
   setVal('f_kwh', d['KWH Consume']);
   setVal('f_n2', d['Nitrogen Consume']);
   setVal('f_note', d['NOTE']);
-  recalc();
+
+  // Tampilkan nilai ringkasan & durasi/rate per batch APA ADANYA dari Gsheet (bukan dihitung ulang),
+  // supaya kalau Anda edit manual kolom-kolom ini langsung di Gsheet, HTML tetap menampilkannya dengan benar.
+  // Begitu Anda mengubah salah satu field batch (start/stop/temp) di form ini, recalc() akan menghitung ulang otomatis (live).
+  for (let i = 1; i <= 5; i++) {
+    const durEl = document.getElementById('b_dur_' + i);
+    const rateEl = document.getElementById('b_rate_' + i);
+    const durVal = d['Duration-' + i];
+    const rateVal = d['Heating Rate-' + i];
+    if (durEl) durEl.textContent = (durVal !== '' && durVal !== undefined && durVal !== null) ? durVal : '-';
+    if (rateEl) rateEl.textContent = (rateVal !== '' && rateVal !== undefined && rateVal !== null) ? rateVal : '-';
+  }
+  const lastTemp = d['Last Temperature'];
+  const totalDur = d['Total Duration'];
+  const avgRate = d['Average Heating Rate'];
+  document.getElementById('sum_lastTemp').textContent = (lastTemp !== '' && lastTemp !== undefined && lastTemp !== null) ? lastTemp : '-';
+  document.getElementById('sum_totalDur').textContent = (totalDur !== '' && totalDur !== undefined && totalDur !== null) ? totalDur : '-';
+  document.getElementById('sum_avgRate').textContent = (avgRate !== '' && avgRate !== undefined && avgRate !== null) ? avgRate : '-';
+
+  renderSummary();
   updateStatusBadge(d['Status'], d['Revisi']);
 }
 
