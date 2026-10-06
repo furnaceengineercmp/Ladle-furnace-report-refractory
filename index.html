@@ -83,6 +83,10 @@
   .stat-box .val{font-size:22px;font-weight:700;color:var(--accent2);}
   .stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:4px;}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px;}
+  .stat-box.variant-refresh{border-color:color-mix(in srgb, var(--yellow) 45%, var(--border));}
+  .stat-box.variant-refresh .val{color:var(--yellow);}
+  .filter-bar{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);}
+  .filter-bar .filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
 
   .chip-row{display:flex;gap:8px;flex-wrap:wrap;}
   .chip{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);cursor:pointer;font-size:13px;}
@@ -374,6 +378,14 @@
         <div class="stat-box"><div class="val" id="e_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti<span class="zh">平均使用次数/更换</span></div></div>
         <div class="stat-box"><div class="val" id="e_lastLot">-</div><div class="lbl">LOT Terakhir Ganti<span class="zh">最后更换批号(LOT)</span></div></div>
       </div>
+      <div class="filter-bar" id="electrodeFilterBar" style="display:none;">
+        <div class="filter-label">Filter Tanggal &amp; Kata Kunci (mempengaruhi Total Pergantian &amp; Rata-rata)</div>
+        <div class="grid cols3">
+          <div class="field"><label>Dari Tanggal</label><input type="date" id="e_filterStart" onchange="loadElectrodeStats(currentElectrode)"></div>
+          <div class="field"><label>Sampai Tanggal</label><input type="date" id="e_filterEnd" onchange="loadElectrodeStats(currentElectrode)"></div>
+          <div class="field"><label>Kata Kunci (Note)</label><input type="text" id="e_filterKeyword" placeholder="mis. redspot" onkeydown="if(event.key==='Enter')loadElectrodeStats(currentElectrode)"></div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -382,6 +394,14 @@
         <div class="stat-box"><div class="val" id="eg_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Elektrode)<span class="zh">更换总次数（所有电极）</span></div></div>
         <div class="stat-box"><div class="val" id="eg_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Elektrode)<span class="zh">平均使用次数/更换（所有电极）</span></div></div>
         <div class="stat-box"><div class="val" id="eg_lastLot">-</div><div class="lbl">LOT Terakhir Ganti (Semua Elektrode)<span class="zh">最后更换批号(LOT)（所有电极）</span></div></div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-label">Filter Tanggal &amp; Kata Kunci</div>
+        <div class="grid cols3">
+          <div class="field"><label>Dari Tanggal</label><input type="date" id="eg_filterStart" onchange="loadElectrodeGlobalStats()"></div>
+          <div class="field"><label>Sampai Tanggal</label><input type="date" id="eg_filterEnd" onchange="loadElectrodeGlobalStats()"></div>
+          <div class="field"><label>Kata Kunci (Note)</label><input type="text" id="eg_filterKeyword" placeholder="mis. redspot" onkeydown="if(event.key==='Enter')loadElectrodeGlobalStats()"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -393,7 +413,8 @@
       <label>Pilih Ladle <span class="zh" style="display:inline;">选择钢包</span></label>
       <div class="chip-row" id="ladleChipRow"></div>
       <div class="stat-grid" id="ladleUsageStats" style="display:none;">
-        <div class="stat-box"><div class="val" id="l_totalUsage">-</div><div class="lbl">Total Pemakaian LF (ladle ini)<span class="zh">LF使用总次数（此钢包）</span></div></div>
+        <div class="stat-box"><div class="val" id="l_totalUsage">-</div><div class="lbl">Total Pemakaian LF &mdash; Keseluruhan<span class="zh">LF使用总次数 — 全部</span></div></div>
+        <div class="stat-box variant-refresh"><div class="val" id="l_totalUsageSinceRelining">-</div><div class="lbl">Total Pemakaian LF &mdash; Sejak Relining Total<span class="zh">LF使用次数 — 自上次整体翻新以来</span></div></div>
       </div>
       <div class="field" style="margin-top:16px;display:none;" id="ladleJenisField">
         <label>Jenis Pergantian <span class="zh" style="display:inline;">更换类型</span></label>
@@ -411,8 +432,17 @@
         <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian<span class="zh">更换总次数</span></div></div>
         <div class="stat-box"><div class="val" id="lr_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti<span class="zh">上次更换后的使用次数</span></div></div>
         <div class="stat-box"><div class="val" id="lr_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti<span class="zh">更换前一周期的使用次数</span></div></div>
-        <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti<span class="zh">平均使用次数/更换</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Keseluruhan<span class="zh">平均使用次数/更换 — 全部</span></div></div>
+        <div class="stat-box variant-refresh"><div class="val" id="lr_avgUsageSinceRelining">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Sejak Relining Total<span class="zh">平均使用次数/更换 — 自上次整体翻新以来</span></div></div>
         <div class="stat-box"><div class="val" id="lr_lastLot">-</div><div class="lbl">LOT Terakhir Ganti<span class="zh">最后更换批号(LOT)</span></div></div>
+      </div>
+      <div class="filter-bar" id="ladleFilterBar" style="display:none;">
+        <div class="filter-label">Filter Tanggal &amp; Kata Kunci (mempengaruhi Total Pergantian &amp; kedua Rata-rata)</div>
+        <div class="grid cols3">
+          <div class="field"><label>Dari Tanggal</label><input type="date" id="lr_filterStart" onchange="loadLadleRefractoryStats()"></div>
+          <div class="field"><label>Sampai Tanggal</label><input type="date" id="lr_filterEnd" onchange="loadLadleRefractoryStats()"></div>
+          <div class="field"><label>Kata Kunci (Note)</label><input type="text" id="lr_filterKeyword" placeholder="mis. redspot" onkeydown="if(event.key==='Enter')loadLadleRefractoryStats()"></div>
+        </div>
       </div>
     </div>
 
@@ -432,7 +462,8 @@
       </div>
       <div class="stat-grid" id="globalRefractoryStats" style="display:none;margin-top:14px;">
         <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle)<span class="zh">更换总次数（所有钢包）</span></div></div>
-        <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti (Semua Ladle)<span class="zh">平均使用次数/更换（所有钢包）</span></div></div>
+        <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Keseluruhan<span class="zh">平均使用次数/更换 — 全部</span></div></div>
+        <div class="stat-box variant-refresh"><div class="val" id="g_avgUsageSinceRelining">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Sejak Relining Total<span class="zh">平均使用次数/更换 — 自上次整体翻新以来</span></div></div>
         <div class="stat-box"><div class="val" id="g_lastLot">-</div><div class="lbl">LOT Terakhir (Semua Ladle)<span class="zh">最后批号(LOT)（所有钢包）</span></div></div>
       </div>
       <div class="stat-grid" id="globalLadleStatus" style="display:none;margin-top:10px;">
@@ -440,6 +471,14 @@
         <div class="stat-box"><div class="val" id="g_readyList" style="font-size:16px;">-</div><div class="lbl">Ladle Ready (Belum Dipakai Lagi Sejak Ganti)<span class="zh">备用钢包（更换后尚未再使用）</span></div></div>
       </div>
       <p class="note-hint" id="g_noRecordHint" style="margin-top:10px;"></p>
+      <div class="filter-bar">
+        <div class="filter-label">Filter Tanggal &amp; Kata Kunci</div>
+        <div class="grid cols3">
+          <div class="field"><label>Dari Tanggal</label><input type="date" id="g_filterStart" onchange="loadGlobalRefractoryStats()"></div>
+          <div class="field"><label>Sampai Tanggal</label><input type="date" id="g_filterEnd" onchange="loadGlobalRefractoryStats()"></div>
+          <div class="field"><label>Kata Kunci (Note)</label><input type="text" id="g_filterKeyword" placeholder="mis. redspot" onkeydown="if(event.key==='Enter')loadGlobalRefractoryStats()"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -459,6 +498,20 @@
   </div>
 </div>
 
+<div class="modal-bg" id="editPasswordModal">
+  <div class="modal">
+    <h3>Konfirmasi Edit Laporan</h3>
+    <p id="editPasswordText">Apakah Anda yakin ingin mengganti data pada LOT ini? Laporan ini sudah final dan sudah tercatat di sistem. Masukkan password untuk melanjutkan.</p>
+    <input type="password" id="editPasswordInput" placeholder="Password" style="text-align:center;font-size:16px;" onkeydown="if(event.key==='Enter')confirmEditPassword()">
+    <div id="editPasswordError" style="color:var(--danger);font-size:12.5px;margin-top:8px;display:none;">Password salah, coba lagi.</div>
+    <p class="note-hint" style="margin-top:10px;">Lupa password? Hubungi engineer.</p>
+    <div class="btn-row" style="margin-top:4px;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="cancelEditPassword()">Batal</button>
+      <button class="btn btn-primary" style="width:100%;" onclick="confirmEditPassword()">Konfirmasi</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
    ISI URL WEB APP APPS SCRIPT ANDA DI SINI (hasil Deploy > Web app)
@@ -473,6 +526,7 @@ let editModalResolve = null;
 let currentLotData = null; // data existing yg terakhir dimuat untuk LOT saat ini
 let autosaveTimer = null;
 let selectedLadle = null;
+let currentElectrode = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!WEB_APP_URL) document.getElementById('configWarning').style.display = 'block';
@@ -869,9 +923,15 @@ async function checkLotAndLoad() {
       document.getElementById('lfLotHint').textContent = 'No LOT ini sudah ada (Final).';
       const choice = await askEditConfirm('No LOT ini sudah memiliki laporan Final' + (res.Revisi ? ' (' + res.Revisi + ')' : '') + '. Apakah Anda ingin mengedit laporan tersebut, hanya melihat saja, atau batal?');
       if (choice === 'edit') {
-        setFormReadOnly(false);
-        fillLFForm(res);
-        toast('Data dimuat untuk diedit', 'ok');
+        const pwdOk = await askEditPasswordConfirm(lot);
+        if (pwdOk) {
+          setFormReadOnly(false);
+          fillLFForm(res);
+          toast('Data dimuat untuk diedit', 'ok');
+        } else {
+          setVal('f_noLot', '');
+          currentLotData = null;
+        }
       } else if (choice === 'view') {
         setFormReadOnly(true);
         fillLFForm(res);
@@ -901,6 +961,30 @@ function askEditConfirm(text) {
 function closeEditModal(result) {
   document.getElementById('editModal').classList.remove('show');
   if (editModalResolve) editModalResolve(result);
+}
+
+let editPasswordResolve = null;
+function askEditPasswordConfirm(lot) {
+  document.getElementById('editPasswordText').textContent =
+    'Apakah Anda yakin ingin mengganti data pada LOT ' + lot + '? Laporan ini sudah final dan sudah tercatat di sistem. Masukkan password untuk melanjutkan.';
+  document.getElementById('editPasswordInput').value = '';
+  document.getElementById('editPasswordError').style.display = 'none';
+  document.getElementById('editPasswordModal').classList.add('show');
+  return new Promise(resolve => { editPasswordResolve = resolve; });
+}
+async function confirmEditPassword() {
+  const pwd = val('editPasswordInput');
+  const res = await apiGet('checkPassword', { pwd });
+  if (res && res.ok) {
+    document.getElementById('editPasswordModal').classList.remove('show');
+    if (editPasswordResolve) editPasswordResolve(true);
+  } else {
+    document.getElementById('editPasswordError').style.display = 'block';
+  }
+}
+function cancelEditPassword() {
+  document.getElementById('editPasswordModal').classList.remove('show');
+  if (editPasswordResolve) editPasswordResolve(false);
 }
 
 /** Mode "Lihat Saja": semua field dikunci kecuali No LOT (supaya bisa pindah lihat LOT lain), tombol simpan/kirim dinonaktifkan. */
@@ -1026,9 +1110,20 @@ async function submitRefractoryForm() {
    RECORD PERBAIKAN REFRACTORY
 ================================================================== */
 async function loadElectrodeStats(e) {
-  document.querySelectorAll('#screen-record-electrode .chip').forEach(c => c.classList.remove('selected'));
-  event.target.classList.add('selected');
-  const res = await apiGet('getElectrodeStats', { electrode: e });
+  if (!e) return;
+  currentElectrode = e;
+  const clickedChip = window.event && window.event.target ? window.event.target.closest('.chip') : null;
+  if (clickedChip) {
+    document.querySelectorAll('#screen-record-electrode .chip').forEach(c => c.classList.remove('selected'));
+    clickedChip.classList.add('selected');
+  }
+  document.getElementById('electrodeFilterBar').style.display = 'block';
+  const params = { electrode: e };
+  const startDate = val('e_filterStart'), endDate = val('e_filterEnd'), keyword = val('e_filterKeyword');
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  if (keyword) params.keyword = keyword;
+  const res = await apiGet('getElectrodeStats', params);
   if (!res) return;
   document.getElementById('electrodeStats').style.display = 'grid';
   document.getElementById('e_totalChanges').textContent = res.totalChanges || 0;
@@ -1039,7 +1134,12 @@ async function loadElectrodeStats(e) {
 }
 
 async function loadElectrodeGlobalStats() {
-  const res = await apiGet('getElectrodeGlobalStats', {});
+  const params = {};
+  const startDate = val('eg_filterStart'), endDate = val('eg_filterEnd'), keyword = val('eg_filterKeyword');
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  if (keyword) params.keyword = keyword;
+  const res = await apiGet('getElectrodeGlobalStats', params);
   if (!res) return;
   document.getElementById('eg_totalChanges').textContent = res.totalChanges || 0;
   document.getElementById('eg_avgUsage').textContent = res.avgUsageAll !== '' ? res.avgUsageAll : '-';
@@ -1061,22 +1161,31 @@ async function selectLadle(n, chipEl) {
   chipEl.classList.add('selected');
   document.getElementById('ladleJenisField').style.display = 'block';
   document.getElementById('ladleRefractoryStats').style.display = 'none';
+  document.getElementById('ladleFilterBar').style.display = 'none';
   setVal('l_jenisRefractory', '');
   const res = await apiGet('getLadleStats', { ladle: n });
   if (!res) return;
   document.getElementById('ladleUsageStats').style.display = 'grid';
   document.getElementById('l_totalUsage').textContent = res.totalUsageLF || 0;
+  document.getElementById('l_totalUsageSinceRelining').textContent = res.totalUsageSinceRelining || 0;
 }
 async function loadLadleRefractoryStats() {
   const jr = val('l_jenisRefractory');
   if (!jr || !selectedLadle) return;
-  const res = await apiGet('getLadleRefractoryStats', { ladle: selectedLadle, jenisRefractory: jr });
+  document.getElementById('ladleFilterBar').style.display = 'block';
+  const params = { ladle: selectedLadle, jenisRefractory: jr };
+  const startDate = val('lr_filterStart'), endDate = val('lr_filterEnd'), keyword = val('lr_filterKeyword');
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  if (keyword) params.keyword = keyword;
+  const res = await apiGet('getLadleRefractoryStats', params);
   if (!res) return;
   document.getElementById('ladleRefractoryStats').style.display = 'grid';
   document.getElementById('lr_totalChanges').textContent = res.totalChanges || 0;
   document.getElementById('lr_usageSinceLast').textContent = res.usageSinceLast !== '' ? res.usageSinceLast : '-';
   document.getElementById('lr_usagePrevCycle').textContent = res.usagePrevCycle !== '' ? res.usagePrevCycle : '-';
   document.getElementById('lr_avgUsage').textContent = res.avgUsage !== '' ? res.avgUsage : '-';
+  document.getElementById('lr_avgUsageSinceRelining').textContent = res.avgUsageSinceRelining !== '' ? res.avgUsageSinceRelining : '-';
   document.getElementById('lr_lastLot').textContent = res.lastLot || '-';
 }
 
@@ -1088,11 +1197,17 @@ async function loadGlobalRefractoryStats() {
     document.getElementById('g_noRecordHint').textContent = '';
     return;
   }
-  const res = await apiGet('getRefractoryGlobalStats', { jenisRefractory: jr });
+  const params = { jenisRefractory: jr };
+  const startDate = val('g_filterStart'), endDate = val('g_filterEnd'), keyword = val('g_filterKeyword');
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  if (keyword) params.keyword = keyword;
+  const res = await apiGet('getRefractoryGlobalStats', params);
   if (!res) return;
   document.getElementById('globalRefractoryStats').style.display = 'grid';
   document.getElementById('g_totalChanges').textContent = res.totalChanges || 0;
   document.getElementById('g_avgUsage').textContent = res.avgUsageAll !== '' ? res.avgUsageAll : '-';
+  document.getElementById('g_avgUsageSinceRelining').textContent = res.avgUsageSinceRelining !== '' ? res.avgUsageSinceRelining : '-';
   document.getElementById('g_lastLot').textContent = res.lastLotOverall || '-';
   document.getElementById('globalLadleStatus').style.display = 'grid';
   document.getElementById('g_inUseList').textContent = (res.inUseLadles && res.inUseLadles.length) ? res.inUseLadles.join(', ') : '-';
