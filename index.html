@@ -63,6 +63,13 @@
   table.batch td.item-label{text-align:left;color:var(--muted);white-space:nowrap;background:var(--panel2);}
   table.batch input{padding:6px;font-size:12.5px;text-align:center;}
   .table-scroll{overflow-x:auto;}
+  table.gridmark{width:100%;border-collapse:collapse;font-size:12px;}
+  table.gridmark th,table.gridmark td{border:1px solid var(--border);padding:5px 7px;text-align:center;white-space:nowrap;}
+  table.gridmark th{background:var(--panel2);color:var(--accent2);font-weight:600;}
+  table.gridmark td.rowlabel{text-align:left;color:var(--text);background:var(--panel2);font-weight:600;position:sticky;left:0;z-index:1;}
+  table.gridmark td.mark{color:#1a1a1a;font-weight:700;}
+  .mark-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11.5px;color:var(--muted);}
+  .mark-legend span.swatch{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:4px;vertical-align:-2px;}
 
   .readonly{background:rgba(255,255,255,.03);color:var(--muted);}
 
@@ -358,7 +365,49 @@
         <div class="icon">&#129521;</div>
         <div><h3>Record Refractory<span class="zh">耐火材料记录</span></h3><p>Riwayat &amp; statistik pergantian refractory per ladle<span class="zh">每个钢包耐火材料更换的历史记录与统计</span></p></div>
       </div>
+      <div class="menu-card" onclick="showScreen('dashboard-usage')">
+        <div class="icon">&#128202;</div>
+        <div><h3>Dashboard Pemakaian Material<span class="zh">材料使用情况仪表板</span></h3><p>Tabel pemakaian v/x/s/T per ladle, seperti sheet "Usage"<span class="zh">每个钢包的使用/更换记录表，对应Gsheet "Usage"</span></p></div>
+      </div>
+      <div class="menu-card" onclick="showScreen('dashboard-ladle-avail')">
+        <div class="icon">&#128197;</div>
+        <div><h3>Dashboard Ketersediaan Ladle<span class="zh">钢包可用性仪表板</span></h3><p>Status v/x/o/g/r semua ladle per tanggal, seperti sheet "Ladle Availability"<span class="zh">每个钢包每日状态，对应Gsheet "Ladle Availability"</span></p></div>
+      </div>
     </div>
+  </section>
+
+  <!-- ================= SCREEN: DASHBOARD USAGE ================= -->
+  <section class="screen" id="screen-dashboard-usage">
+    <div class="card">
+      <label>Pilih Ladle <span class="zh" style="display:inline;">选择钢包</span></label>
+      <div class="chip-row" id="usageLadleChipRow"></div>
+      <div class="field" style="margin-top:14px;">
+        <label>Filter: Mulai dari Pergantian Terakhir Jenis Ini (opsional) <span class="zh" style="display:inline;">筛选：从该类型最后一次更换开始（可选）</span></label>
+        <select id="usage_filterMaterial" onchange="loadUsageData()">
+          <option value="">(Semua)</option>
+          <option value="Permeable Brick">Permeable Brick &#8226; 透气芯</option>
+          <option value="Permeable Seat">Permeable Seat &#8226; 透气芯座砖</option>
+          <option value="Slag Relining">Slag Relining &#8226; 渣线</option>
+          <option value="Side Wall Relining">Side Wall Relining &#8226; 包璧</option>
+          <option value="Bottom Relining">Bottom Relining &#8226; 包底</option>
+          <option value="Relining Total">Relining Total &#8226; 钢包整体</option>
+        </select>
+      </div>
+      <p class="note-hint" style="margin-top:10px;">&#128161; Angka "Life time standar" diatur di sheet Gsheet "Usage" kolom B (baris 4-9) - ubah di sana, dashboard ini otomatis mengikuti.</p>
+    </div>
+    <div id="usageTableWrap"></div>
+  </section>
+
+  <!-- ================= SCREEN: DASHBOARD LADLE AVAILABILITY ================= -->
+  <section class="screen" id="screen-dashboard-ladle-avail">
+    <div class="card">
+      <div class="grid cols2">
+        <div class="field"><label>Tanggal Mulai <span class="zh" style="display:inline;">开始日期</span></label><input type="date" id="avail_startDate" onchange="loadLadleAvailData()"></div>
+        <div class="field"><label>Tanggal Selesai <span class="zh" style="display:inline;">结束日期</span></label><input type="date" id="avail_endDate" onchange="loadLadleAvailData()"></div>
+      </div>
+      <p class="note-hint" style="margin-top:10px;">&#128161; Daftar ladle yang dipantau & syarat jumlah ready diatur di sheet Gsheet "Ladle Availability" (kolom A &amp; sel D19) - ubah di sana, dashboard ini otomatis mengikuti.</p>
+    </div>
+    <div id="availTableWrap"></div>
   </section>
 
   <!-- ================= SCREEN: RECORD ELECTRODE ================= -->
@@ -578,7 +627,9 @@ function render(id, isBack) {
     'refractory-form': ['Input Perbaikan Refractory', 'Elektrode & Refractory'],
     'record-menu': ['Record Perbaikan Refractory / 耐火材料维修记录', 'Pilih jenis record / 选择记录类型'],
     'record-electrode': ['Record Elektrode / 电极记录', 'Statistik pergantian elektrode / 电极更换统计'],
-    'record-refractory': ['Record Refractory / 耐火材料记录', 'Statistik pergantian refractory / 耐火材料更换统计']
+    'record-refractory': ['Record Refractory / 耐火材料记录', 'Statistik pergantian refractory / 耐火材料更换统计'],
+    'dashboard-usage': ['Dashboard Pemakaian Material / 材料使用情况仪表板', 'Seperti sheet Usage / 对应Gsheet "Usage"'],
+    'dashboard-ladle-avail': ['Dashboard Ketersediaan Ladle / 钢包可用性仪表板', 'Seperti sheet Ladle Availability / 对应Gsheet "Ladle Availability"']
   };
   document.getElementById('screenTitle').textContent = titles[id][0];
   document.getElementById('screenSub').textContent = titles[id][1];
@@ -591,6 +642,19 @@ function render(id, isBack) {
   }
   if (id === 'record-electrode') {
     loadElectrodeGlobalStats();
+  }
+  if (id === 'dashboard-usage' && !isBack) {
+    buildUsageLadleChips();
+  }
+  if (id === 'dashboard-ladle-avail' && !isBack) {
+    // default rentang: tanggal 1 bulan ini sampai hari ini (bisa diubah bebas)
+    if (!val('avail_startDate') && !val('avail_endDate')) {
+      const now = new Date();
+      const pad = n => (n < 10 ? '0' + n : n);
+      setVal('avail_startDate', now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-01');
+      setVal('avail_endDate', now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()));
+    }
+    loadLadleAvailData();
   }
 }
 
@@ -1215,6 +1279,122 @@ async function loadGlobalRefractoryStats() {
   document.getElementById('g_noRecordHint').textContent = (res.noRecordLadles && res.noRecordLadles.length)
     ? ('Belum ada data perbaikan jenis ini untuk ladle: ' + res.noRecordLadles.join(', ') + ' / 以下钢包尚无此类型的维修数据：' + res.noRecordLadles.join(', '))
     : '';
+}
+
+/* ==================================================================
+   DASHBOARD PEMAKAIAN MATERIAL (setara sheet Gsheet "Usage")
+================================================================== */
+const USAGE_MARK_COLOR = { x: '#d9d9d9', v: '#d9ead3', s: '#f4cccc', T: '#fff2cc' };
+let selectedUsageLadle = null;
+
+function buildUsageLadleChips() {
+  const row = document.getElementById('usageLadleChipRow');
+  if (row.childElementCount > 0) return; // sudah dibangun sebelumnya
+  for (let i = 1; i <= 8; i++) {
+    const c = document.createElement('div');
+    c.className = 'chip'; c.textContent = i;
+    c.onclick = () => selectUsageLadle(i, c);
+    row.appendChild(c);
+  }
+}
+function selectUsageLadle(n, chipEl) {
+  selectedUsageLadle = n;
+  document.querySelectorAll('#usageLadleChipRow .chip').forEach(c => c.classList.remove('selected'));
+  chipEl.classList.add('selected');
+  loadUsageData();
+}
+async function loadUsageData() {
+  if (!selectedUsageLadle) return;
+  const wrap = document.getElementById('usageTableWrap');
+  wrap.innerHTML = '<p class="note-hint">Memuat data...</p>';
+  const filterMaterial = val('usage_filterMaterial');
+  const res = await apiGet('getUsageData', { ladle: selectedUsageLadle, jenisRefractory: filterMaterial });
+  if (!res) { wrap.innerHTML = ''; return; }
+  renderUsageTable(res);
+}
+function renderUsageTable(data) {
+  const wrap = document.getElementById('usageTableWrap');
+  if (!data.lots || data.lots.length === 0) {
+    wrap.innerHTML = '<div class="card"><p class="note-hint">Belum ada data No LOT untuk ladle ini.</p></div>';
+    return;
+  }
+  let head = '<th>Jenis Pergantian</th><th>Life time standar</th><th>Jarak</th><th>Sampai Berganti</th><th>Saat Ini</th>';
+  data.lots.forEach(lot => { head += '<th>' + escapeHtml(lot) + '</th>'; });
+  let body = '';
+  data.materials.forEach(mat => {
+    body += '<tr><td class="rowlabel">' + escapeHtml(mat.name) + '</td><td>' + escapeHtml(mat.standar) + '</td><td>' +
+      escapeHtml(mat.jarak) + '</td><td>' + (mat.jumlahSampaiBerganti === '' ? '-' : escapeHtml(mat.jumlahSampaiBerganti)) +
+      '</td><td>' + escapeHtml(mat.jumlahSaatIni) + '</td>';
+    mat.marks.forEach(mk => {
+      body += '<td class="mark" style="background:' + (USAGE_MARK_COLOR[mk] || '') + '">' + mk + '</td>';
+    });
+    body += '</tr>';
+  });
+  wrap.innerHTML =
+    '<div class="card"><div class="table-scroll"><table class="gridmark"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
+    '<div class="mark-legend">' +
+      '<div><span class="swatch" style="background:' + USAGE_MARK_COLOR.x + '"></span>x = pergantian</div>' +
+      '<div><span class="swatch" style="background:' + USAGE_MARK_COLOR.v + '"></span>v = pemakaian</div>' +
+      '<div><span class="swatch" style="background:' + USAGE_MARK_COLOR.s + '"></span>s = titik standar</div>' +
+      '<div><span class="swatch" style="background:' + USAGE_MARK_COLOR.T + '"></span>T = pergantian tepat di titik standar</div>' +
+    '</div></div>';
+}
+
+/* ==================================================================
+   DASHBOARD KETERSEDIAAN LADLE (setara sheet Gsheet "Ladle Availability")
+================================================================== */
+const AVAIL_MARK_COLOR = { x: '#d9d9d9', v: '#d9ead3', o: '#f4cccc', g: '#cfe2f3', r: '#fce5cd' };
+
+async function loadLadleAvailData() {
+  const startDate = val('avail_startDate'), endDate = val('avail_endDate');
+  const wrap = document.getElementById('availTableWrap');
+  if (!startDate || !endDate) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<p class="note-hint">Memuat data...</p>';
+  const res = await apiGet('getLadleAvailData', { startDate, endDate });
+  if (!res) { wrap.innerHTML = ''; return; }
+  renderAvailTable(res);
+}
+function renderAvailTable(data) {
+  const wrap = document.getElementById('availTableWrap');
+  if (!data.ladles || data.ladles.length === 0) {
+    wrap.innerHTML = '<div class="card"><p class="note-hint">Belum ada ladle terdaftar di sheet "Ladle Availability" kolom A, atau rentang tanggal belum diisi.</p></div>';
+    return;
+  }
+  const qualText = data.qualifyingDays !== '' ? data.qualifyingDays : '-';
+  let summary = '<div class="stat-grid"><div class="stat-box"><div class="val">' + qualText + '</div>' +
+    '<div class="lbl">Jumlah Hari Ladle Ready &ge; ' + data.threshold + '<span class="zh">钢包就绪天数 &ge; ' + data.threshold + '</span></div></div></div>';
+
+  if (!data.lots || data.lots.length === 0) {
+    wrap.innerHTML = '<div class="card">' + summary + '<p class="note-hint" style="margin-top:12px;">Tidak ada No LOT (tapping) tercatat dalam rentang tanggal ini.</p></div>';
+    return;
+  }
+
+  let head = '<th>Ladle</th><th>Jml Perbaikan</th><th>Total Hari Perbaikan</th><th>Sampai Berganti</th><th>Saat Ini</th>';
+  data.lots.forEach((lot, i) => { head += '<th>' + escapeHtml(data.dates[i]) + '<br>' + escapeHtml(lot) + '</th>'; });
+  let body = '';
+  data.ladles.forEach(ld => {
+    body += '<tr><td class="rowlabel">' + escapeHtml(ld.ladle) + '</td><td>' + escapeHtml(ld.jumlahPerbaikan) + '</td><td>' +
+      escapeHtml(ld.totalHariPerbaikan) + '</td><td>' + (ld.jumlahSampaiBerganti === '' ? '-' : escapeHtml(ld.jumlahSampaiBerganti)) +
+      '</td><td>' + escapeHtml(ld.jumlahSaatIni) + '</td>';
+    ld.marks.forEach(mk => {
+      body += '<td class="mark" style="background:' + (AVAIL_MARK_COLOR[mk] || '') + '">' + (mk || '-') + '</td>';
+    });
+    body += '</tr>';
+  });
+  let readyRow = '<tr><td class="rowlabel" colspan="5">Jumlah Ladle Ready di Tanggal Itu</td>';
+  data.readyCountPerColumn.forEach(c => { readyRow += '<td class="mark" style="background:' + AVAIL_MARK_COLOR.g + '">' + c + '</td>'; });
+  readyRow += '</tr>';
+
+  wrap.innerHTML =
+    '<div class="card">' + summary + '</div>' +
+    '<div class="card"><div class="table-scroll"><table class="gridmark"><thead><tr>' + head + '</tr></thead><tbody>' + body + readyRow + '</tbody></table></div>' +
+    '<div class="mark-legend">' +
+      '<div><span class="swatch" style="background:' + AVAIL_MARK_COLOR.x + '"></span>x = pergantian</div>' +
+      '<div><span class="swatch" style="background:' + AVAIL_MARK_COLOR.v + '"></span>v = pemakaian tapping</div>' +
+      '<div><span class="swatch" style="background:' + AVAIL_MARK_COLOR.o + '"></span>o = idle, menunggu giliran</div>' +
+      '<div><span class="swatch" style="background:' + AVAIL_MARK_COLOR.g + '"></span>g = ready setelah perbaikan</div>' +
+      '<div><span class="swatch" style="background:' + AVAIL_MARK_COLOR.r + '"></span>r = sedang diperbaiki</div>' +
+    '</div></div>';
 }
 </script>
 </body>
