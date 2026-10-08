@@ -381,19 +381,11 @@
     <div class="card">
       <label>Pilih Ladle <span class="zh" style="display:inline;">选择钢包</span></label>
       <div class="chip-row" id="usageLadleChipRow"></div>
-      <div class="field" style="margin-top:14px;">
-        <label>Filter: Mulai dari Pergantian Terakhir Jenis Ini (opsional) <span class="zh" style="display:inline;">筛选：从该类型最后一次更换开始（可选）</span></label>
-        <select id="usage_filterMaterial" onchange="loadUsageData()">
-          <option value="">(Semua)</option>
-          <option value="Permeable Brick">Permeable Brick &#8226; 透气芯</option>
-          <option value="Permeable Seat">Permeable Seat &#8226; 透气芯座砖</option>
-          <option value="Slag Relining">Slag Relining &#8226; 渣线</option>
-          <option value="Side Wall Relining">Side Wall Relining &#8226; 包璧</option>
-          <option value="Bottom Relining">Bottom Relining &#8226; 包底</option>
-          <option value="Relining Total">Relining Total &#8226; 钢包整体</option>
-        </select>
+      <div class="grid cols2" style="margin-top:14px;">
+        <div class="field"><label>Dari Tanggal <span class="zh" style="display:inline;">开始日期</span></label><input type="date" id="usage_startDate" onchange="loadUsageData()"></div>
+        <div class="field"><label>Sampai Tanggal <span class="zh" style="display:inline;">结束日期</span></label><input type="date" id="usage_endDate" onchange="loadUsageData()"></div>
       </div>
-      <p class="note-hint" style="margin-top:10px;">&#128161; Angka "Life time standar" diatur di sheet Gsheet "Usage" kolom B (baris 4-9) - ubah di sana, dashboard ini otomatis mengikuti.</p>
+      <p class="note-hint" style="margin-top:10px;">&#128161; Kosongkan tanggal = tampil semua data (sama dengan sheet "Usage"). Filter tanggal hanya memilih kolom LOT yang ditampilkan; angka Jarak/Sampai Berganti/Saat Ini tetap dari histori penuh. "Life time standar" diatur di sheet "Usage" kolom B (baris 4-9).</p>
     </div>
     <div id="usageTableWrap"></div>
   </section>
@@ -478,7 +470,8 @@
         </select>
       </div>
       <div class="stat-grid" id="ladleRefractoryStats" style="display:none;">
-        <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian<span class="zh">更换总次数</span></div></div>
+        <div class="stat-box"><div class="val" id="lr_totalChanges">-</div><div class="lbl">Total Pergantian &mdash; Keseluruhan<span class="zh">更换总次数 — 全部</span></div></div>
+        <div class="stat-box variant-refresh"><div class="val" id="lr_totalChangesSinceRelining">-</div><div class="lbl">Total Pergantian &mdash; Sejak Relining Total<span class="zh">更换总次数 — 自上次整体翻新以来</span></div></div>
         <div class="stat-box"><div class="val" id="lr_usageSinceLast">-</div><div class="lbl">Pemakaian Sejak Terakhir Ganti<span class="zh">上次更换后的使用次数</span></div></div>
         <div class="stat-box"><div class="val" id="lr_usagePrevCycle">-</div><div class="lbl">Pemakaian di Cycle Sebelum Diganti<span class="zh">更换前一周期的使用次数</span></div></div>
         <div class="stat-box"><div class="val" id="lr_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Keseluruhan<span class="zh">平均使用次数/更换 — 全部</span></div></div>
@@ -510,7 +503,8 @@
         </select>
       </div>
       <div class="stat-grid" id="globalRefractoryStats" style="display:none;margin-top:14px;">
-        <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle)<span class="zh">更换总次数（所有钢包）</span></div></div>
+        <div class="stat-box"><div class="val" id="g_totalChanges">-</div><div class="lbl">Total Pergantian (Semua Ladle) &mdash; Keseluruhan<span class="zh">更换总次数（所有钢包）— 全部</span></div></div>
+        <div class="stat-box variant-refresh"><div class="val" id="g_totalChangesSinceRelining">-</div><div class="lbl">Total Pergantian (Semua Ladle) &mdash; Sejak Relining Total<span class="zh">更换总次数（所有钢包）— 自上次整体翻新以来</span></div></div>
         <div class="stat-box"><div class="val" id="g_avgUsage">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Keseluruhan<span class="zh">平均使用次数/更换 — 全部</span></div></div>
         <div class="stat-box variant-refresh"><div class="val" id="g_avgUsageSinceRelining">-</div><div class="lbl">Rata-rata Pemakaian / Ganti &mdash; Sejak Relining Total<span class="zh">平均使用次数/更换 — 自上次整体翻新以来</span></div></div>
         <div class="stat-box"><div class="val" id="g_lastLot">-</div><div class="lbl">LOT Terakhir (Semua Ladle)<span class="zh">最后批号(LOT)（所有钢包）</span></div></div>
@@ -1246,6 +1240,7 @@ async function loadLadleRefractoryStats() {
   if (!res) return;
   document.getElementById('ladleRefractoryStats').style.display = 'grid';
   document.getElementById('lr_totalChanges').textContent = res.totalChanges || 0;
+  document.getElementById('lr_totalChangesSinceRelining').textContent = res.totalChangesSinceRelining || 0;
   document.getElementById('lr_usageSinceLast').textContent = res.usageSinceLast !== '' ? res.usageSinceLast : '-';
   document.getElementById('lr_usagePrevCycle').textContent = res.usagePrevCycle !== '' ? res.usagePrevCycle : '-';
   document.getElementById('lr_avgUsage').textContent = res.avgUsage !== '' ? res.avgUsage : '-';
@@ -1270,6 +1265,7 @@ async function loadGlobalRefractoryStats() {
   if (!res) return;
   document.getElementById('globalRefractoryStats').style.display = 'grid';
   document.getElementById('g_totalChanges').textContent = res.totalChanges || 0;
+  document.getElementById('g_totalChangesSinceRelining').textContent = res.totalChangesSinceRelining || 0;
   document.getElementById('g_avgUsage').textContent = res.avgUsageAll !== '' ? res.avgUsageAll : '-';
   document.getElementById('g_avgUsageSinceRelining').textContent = res.avgUsageSinceRelining !== '' ? res.avgUsageSinceRelining : '-';
   document.getElementById('g_lastLot').textContent = res.lastLotOverall || '-';
@@ -1307,19 +1303,21 @@ async function loadUsageData() {
   if (!selectedUsageLadle) return;
   const wrap = document.getElementById('usageTableWrap');
   wrap.innerHTML = '<p class="note-hint">Memuat data...</p>';
-  const filterMaterial = val('usage_filterMaterial');
-  const res = await apiGet('getUsageData', { ladle: selectedUsageLadle, jenisRefractory: filterMaterial });
+  const params = { ladle: selectedUsageLadle };
+  if (val('usage_startDate')) params.startDate = val('usage_startDate');
+  if (val('usage_endDate')) params.endDate = val('usage_endDate');
+  const res = await apiGet('getUsageData', params);
   if (!res) { wrap.innerHTML = ''; return; }
   renderUsageTable(res);
 }
 function renderUsageTable(data) {
   const wrap = document.getElementById('usageTableWrap');
   if (!data.lots || data.lots.length === 0) {
-    wrap.innerHTML = '<div class="card"><p class="note-hint">Belum ada data No LOT untuk ladle ini.</p></div>';
+    wrap.innerHTML = '<div class="card"><p class="note-hint">Belum ada data No LOT untuk ladle ini pada rentang tanggal tersebut.</p></div>';
     return;
   }
   let head = '<th>Jenis Pergantian</th><th>Life time standar</th><th>Jarak</th><th>Sampai Berganti</th><th>Saat Ini</th>';
-  data.lots.forEach(lot => { head += '<th>' + escapeHtml(lot) + '</th>'; });
+  data.lots.forEach((lot, i) => { head += '<th>' + escapeHtml((data.dates && data.dates[i]) || '') + '<br>' + escapeHtml(lot) + '</th>'; });
   let body = '';
   data.materials.forEach(mat => {
     body += '<tr><td class="rowlabel">' + escapeHtml(mat.name) + '</td><td>' + escapeHtml(mat.standar) + '</td><td>' +
