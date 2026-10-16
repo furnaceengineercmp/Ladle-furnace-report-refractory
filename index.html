@@ -457,6 +457,10 @@
         <div class="stat-box"><div class="val" id="l_totalUsage">-</div><div class="lbl">Total Pemakaian LF &mdash; Keseluruhan<span class="zh">LF使用总次数 — 全部</span></div></div>
         <div class="stat-box variant-refresh"><div class="val" id="l_totalUsageSinceRelining">-</div><div class="lbl">Total Pemakaian LF &mdash; Sejak Relining Total<span class="zh">LF使用次数 — 自上次整体翻新以来</span></div></div>
       </div>
+      <div class="stat-box" id="ladleLastRepair" style="display:none;margin-top:10px;text-align:left;">
+        <div class="lbl" style="margin:0 0 6px;font-weight:600;">Perbaikan Terakhir Ladle Ini<span class="zh">此钢包最近一次维修</span></div>
+        <div id="ladleLastRepairBody" style="font-size:13px;line-height:1.6;"></div>
+      </div>
       <div class="field" style="margin-top:16px;display:none;" id="ladleJenisField">
         <label>Jenis Pergantian <span class="zh" style="display:inline;">更换类型</span></label>
         <select id="l_jenisRefractory" onchange="loadLadleRefractoryStats()">
@@ -1221,11 +1225,37 @@ async function selectLadle(n, chipEl) {
   document.getElementById('ladleRefractoryStats').style.display = 'none';
   document.getElementById('ladleFilterBar').style.display = 'none';
   setVal('l_jenisRefractory', '');
+  document.getElementById('ladleLastRepair').style.display = 'none';
   const res = await apiGet('getLadleStats', { ladle: n });
   if (!res) return;
   document.getElementById('ladleUsageStats').style.display = 'grid';
   document.getElementById('l_totalUsage').textContent = res.totalUsageLF || 0;
   document.getElementById('l_totalUsageSinceRelining').textContent = res.totalUsageSinceRelining || 0;
+  renderLastRepair(res.lastRepair);
+}
+
+const ITEM_ZH = {
+  'permeable brick': '透气芯', 'permeable seat': '透气芯座砖', 'permeable seat brick': '透气芯座砖',
+  'slag relining': '渣线', 'side wall relining': '包璧', 'bottom relining': '包底', 'relining total': '钢包整体'
+};
+function renderLastRepair(lr) {
+  const box = document.getElementById('ladleLastRepair');
+  const body = document.getElementById('ladleLastRepairBody');
+  box.style.display = 'block';
+  if (!lr) {
+    body.innerHTML = 'Belum ada data perbaikan untuk ladle ini. <span class="zh" style="display:inline;">此钢包暂无维修记录。</span>';
+    return;
+  }
+  const items = (lr.items || []).map(it => {
+    const zh = ITEM_ZH[String(it).trim().toLowerCase()];
+    return '<span class="chip" style="cursor:default;padding:4px 10px;font-size:12px;">' + escapeHtml(it) + (zh ? ' &#8226; ' + zh : '') + '</span>';
+  }).join(' ');
+  let html = '<div class="chip-row" style="margin-bottom:6px;">' + (items || '-') + '</div>' +
+    '<div>LOT: <b>' + escapeHtml(lr.lot || '-') + '</b> &nbsp;&middot;&nbsp; Tanggal: <b>' + escapeHtml(lr.tanggal || '-') + '</b>' +
+    '<span class="zh" style="display:inline;"> &nbsp;批号 / 日期</span></div>';
+  if (lr.note) html += '<div>Note: ' + escapeHtml(lr.note) + '</div>';
+  if (lr.noteKhusus) html += '<div>Note Khusus: ' + escapeHtml(lr.noteKhusus) + '</div>';
+  body.innerHTML = html;
 }
 async function loadLadleRefractoryStats() {
   const jr = val('l_jenisRefractory');
