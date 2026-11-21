@@ -1455,6 +1455,40 @@ function renderAvailTable(data) {
 </style>
 
 <script>
+<!-- =====================================================================
+ TEMPEL SELURUH ISI FILE INI di file HTML Anda, TEPAT SEBELUM baris </body>
+ (sesudah </script> yang lama). Tidak ada kode lama yang dihapus/diubah.
+ ===================================================================== -->
+<style>
+.sg{--c:var(--accent);border:1px solid var(--border);border-left:5px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--panel)}
+.sg-now{--c:var(--accent)}.sg-rel{--c:var(--yellow)}.sg-all{--c:var(--muted)}
+.sg-h{font-size:13px;font-weight:700;color:var(--c)}
+.sg-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.stat-grid.grouped{display:grid;grid-template-columns:1fr;gap:12px}
+.ruler{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.rl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:600}
+.rl-top .rl-sp{flex:1}
+.rl-pre{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:14px;padding:3px 10px;font-size:11.5px;cursor:pointer}
+.rl-pre:hover{border-color:var(--accent)}
+.rl-track{position:relative;height:28px;margin-top:8px}
+.rl-track:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--border)}
+.rl-fill{position:absolute;top:12px;height:4px;border-radius:2px;background:var(--accent)}
+.rl-track input{position:absolute;left:0;top:0;width:100%;height:28px;margin:0;padding:0;background:none;border:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.rl-track input::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-webkit-slider-runnable-track,.rl-track input::-moz-range-track{background:none}
+.rl-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:2px}
+.ref-banner{padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent2)}
+.ch-row{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13px}
+.ch-dot{width:12px;height:12px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.chip.sm{padding:6px 14px;font-size:12.5px}
+.ch-card{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--panel)}
+.ch-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.ch-3 .stat-box{text-align:left}.ch-3 .b1{border-left:4px solid var(--muted)}.ch-3 .b2{border-left:4px solid #4da3ff}.ch-3 .b3{border-left:4px solid var(--accent)}
+@media(max-width:600px){.ch-3{grid-template-columns:1fr}}
+</style>
+
+<script>
 /* ============ PATCH v2: stat terpisah, ruler tanggal, password sesi, cicil refractory, grafik ============ */
 const $ = id => document.getElementById(id);
 const RULER_MIN = new Date(2025, 0, 1);   // <- awal rentang slider tanggal (ubah bila data Anda lebih lama)
@@ -1643,12 +1677,13 @@ document.querySelector('.wrap').insertAdjacentHTML('beforeend',
   '<label>Nomor Ladle (boleh lebih dari 1)</label><div class="chip-row" id="ch_ladles"></div>' +
   '<label style="margin-top:12px">Jenis Pergantian Refractory (boleh lebih dari 1)</label><div class="chip-row" id="ch_mats"></div>' +
   '<label style="margin-top:12px">Elektrode (boleh lebih dari 1)</label><div class="chip-row" id="ch_elecs"></div>' +
-  '<p class="note-hint">Grafik refractory muncul jika Ladle <b>dan</b> Jenis dipilih. Setiap titik = jumlah pemakaian LF sebelum pergantian itu terjadi.</p></div>' +
+  '<p class="note-hint">Grafik refractory muncul jika Ladle <b>dan</b> Jenis dipilih. Angka di titik = jumlah pemakaian LF sebelum pergantian itu. Garis tegak = awal "brick baru" (dibaca dari Note Khusus).</p></div>' +
   '<div class="card"><h2>2. Rentang Tanggal <span class="zh" style="display:inline">日期范围</span></h2><div class="grid cols2">' +
   '<div class="field"><label>Dari Tanggal</label><input type="date" id="ch_filterStart"></div>' +
   '<div class="field"><label>Sampai Tanggal</label><input type="date" id="ch_filterEnd"></div></div></div>' +
-  '<div class="card"><h2>Grafik</h2><div class="note-hint" id="ch_status"></div>' +
-  '<div style="position:relative;height:340px;margin-top:8px"><canvas id="ch_canvas"></canvas></div><div id="ch_summary" style="margin-top:14px"></div></div></section>');
+  '<div class="card"><h2>Grafik</h2><div class="btn-row" style="margin:0 0 8px"><button type="button" class="btn btn-secondary" style="flex:0 0 auto;min-width:0" onclick="chExportPDF()">⬇ Export PDF</button></div>' +
+  '<div class="note-hint" id="ch_status"></div>' +
+  '<div style="position:relative;height:380px;margin-top:8px"><canvas id="ch_canvas"></canvas></div><div id="ch_summary" style="margin-top:14px"></div></div></section>');
 document.querySelector('#screen-menu .menu-grid').insertAdjacentHTML('beforeend',
   '<div class="menu-card" onclick="showScreen(\'chart\')"><div class="icon">📈</div><div><h3>Grafik Pemakaian<span class="zh">使用次数图表</span></h3><p>Lihat tren pemakaian naik/turun per ladle, refractory & elektrode<span class="zh">查看各钢包、耐火材料与电极的使用趋势</span></p></div></div>');
 
@@ -1664,19 +1699,136 @@ function chChips(host, key, items, label) {
 chChips('ch_ladles', 'ladles', [1, 2, 3, 4, 5, 6, 7, 8].map(String));
 chChips('ch_mats', 'mats', REF_TYPES);
 chChips('ch_elecs', 'elecs', ['A', 'B', 'C'], v => 'Elektrode ' + v);
-let chTimer = null, chObj = null;
+let chTimer = null, chObj = null, chLast = null;
 function chSchedule() { clearTimeout(chTimer); chTimer = setTimeout(chRefresh, 400); }
 ['ch_filterStart', 'ch_filterEnd'].forEach(id => $(id).addEventListener('change', chSchedule));
 const CH_COL = ['#fd7b41', '#4da3ff', '#3ecf8e', '#ffc94d', '#c77dff', '#ff5d8f', '#2ec4b6', '#a0a4a8', '#e07a5f', '#81b29a', '#f2cc8f', '#6d6875'];
-function chLoadLib() {
-  if (window.Chart) return Promise.resolve();
-  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+function chLoadScript(src, test) {
+  if (test()) return Promise.resolve();
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
 }
+const chLoadLib = () => chLoadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js', () => window.Chart);
+const chLoadPdf = () => chLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', () => window.jspdf);
 function chClear() { if (chObj) { chObj.destroy(); chObj = null; } $('ch_summary').innerHTML = ''; }
+
+/* --- plugin: garis tegak "brick baru" --- */
+const chBg = { id: 'chBg', beforeDraw(c) { c.ctx.save(); c.ctx.fillStyle = '#fff'; c.ctx.fillRect(0, 0, c.width, c.height); c.ctx.restore(); } };
+const chBrick = {
+  id: 'chBrick',
+  afterDatasetsDraw(chart, args, opt) {
+    const nbs = (opt && opt.nbs) || []; if (!nbs.length) return;
+    const x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx; let k = 0;
+    ctx.save(); ctx.font = 'bold 10.5px sans-serif'; ctx.textBaseline = 'middle';
+    nbs.forEach(n => {
+      if (n.lot < x.min || n.lot > x.max) return;
+      const px = x.getPixelForValue(n.lot);
+      ctx.strokeStyle = n.col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+      const txt = 'Brick baru ' + n.label + ' (LOT ' + n.lot + ')', w = ctx.measureText(txt).width + 10, y = a.top + 10 + (k++ % 5) * 17;
+      let bx = px + 4; if (bx + w > a.right) bx = px - 4 - w;
+      ctx.fillStyle = n.col; ctx.fillRect(bx, y - 8, w, 16); ctx.fillStyle = '#111'; ctx.fillText(txt, bx + 5, y);
+    });
+    ctx.restore();
+  }
+};
+/* --- plugin: angka callout + garis penunjuk, posisi menyesuaikan agar tidak bertumpuk --- */
+const chCallouts = {
+  id: 'chCallouts',
+  afterDatasetsDraw(chart) {
+    const ctx = chart.ctx, a = chart.chartArea, placed = [], pts = [];
+    const hit = (p, q) => p.x < q.x + q.w && p.x + p.w > q.x && p.y < q.y + q.h && p.y + p.h > q.y;
+    chart.data.datasets.forEach((ds, di) => {
+      if (ds.isTrend || !chart.isDatasetVisible(di)) return;
+      chart.getDatasetMeta(di).data.forEach((el, i) => { pts.push({ x: el.x, y: el.y, v: ds.data[i].y, col: ds.col }); placed.push({ x: el.x - 6, y: el.y - 6, w: 12, h: 12 }); });
+    });
+    ctx.save(); ctx.font = 'bold 11px sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    const cands = [[0, -20], [0, 20], [24, -12], [-24, -12], [24, 12], [-24, 12], [0, -36], [0, 36], [40, 0], [-40, 0], [30, -30], [-30, -30], [30, 30], [-30, 30]];
+    pts.forEach(p => {
+      const txt = String(p.v), w = ctx.measureText(txt).width + 10, h = 16; let box = null;
+      for (const [dx, dy] of cands) {
+        const b = { x: Math.min(a.right - w, Math.max(a.left, p.x + dx - w / 2)), y: Math.min(a.bottom - h, Math.max(a.top, p.y + dy - h / 2)), w, h };
+        if (!placed.some(q => hit(b, q))) { box = b; break; }
+      }
+      if (!box) box = { x: Math.min(a.right - w, Math.max(a.left, p.x - w / 2)), y: Math.max(a.top, p.y - 22 - h / 2), w, h };
+      placed.push(box);
+      const lx = Math.max(box.x, Math.min(p.x, box.x + w)), ly = Math.max(box.y, Math.min(p.y, box.y + h));
+      ctx.strokeStyle = p.col; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lx, ly); ctx.stroke();
+      ctx.fillStyle = p.col; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(box.x, box.y, w, h, 4); else ctx.rect(box.x, box.y, w, h); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.fillText(txt, box.x + w / 2, box.y + h / 2 + 0.5);
+    });
+    ctx.restore();
+  }
+};
+
+/* --- sumbu X: nomor LOT + tanggal (interpolasi dari titik data yang ada) --- */
+function chDateMap(pairs) {
+  const m = {}; pairs.forEach(([l, d]) => { const t = Date.parse(d); if (!isNaN(t)) m[l] = t; });
+  const ls = Object.keys(m).map(Number).sort((x, y) => x - y);
+  return v => {
+    if (!ls.length || v < ls[0] || v > ls[ls.length - 1]) return '';
+    let i = 0; while (i < ls.length - 1 && ls[i + 1] < v) i++;
+    const a = ls[i], b = ls[Math.min(i + 1, ls.length - 1)];
+    const t = a === b ? m[a] : m[a] + (m[b] - m[a]) * (v - a) / (b - a), d = new Date(t), p = n => (n < 10 ? '0' + n : n);
+    return p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1) + '/' + String(d.getUTCFullYear()).slice(2);
+  };
+}
+const chAvg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 100) / 100 : null;
+const chF = v => (v === null || v === undefined || v === '') ? '-' : v;
+function fmtDM(s) { const m = String(s || '').match(/^(\d{4})-(\d\d)-(\d\d)/); return m ? m[3] + '/' + m[2] + '/' + m[1].slice(2) : (s || ''); }
+
+function chPrepare(series) {
+  const ds = [], items = [], lotDates = [], nbMap = {}; let any = false;
+  series.forEach((sr, i) => {
+    const col = CH_COL[i % CH_COL.length], pts = sr.points, n = pts.length, nb = sr.nb;
+    pts.forEach(p => lotDates.push([p.lot, p.date]));
+    if (nb) { lotDates.push([nb.lot, nb.date]); const k = sr.ladle + '|' + nb.lot; if (!nbMap[k]) nbMap[k] = { lot: nb.lot, col, label: 'L' + sr.ladle }; }
+    if (n) any = true;
+    ds.push({ label: sr.name, col, data: pts.map(p => ({ x: p.lot, y: p.value, date: p.date, nb: p.nb })), borderColor: col, backgroundColor: col, tension: .25, borderWidth: 2,
+      pointRadius: c => (c.raw && c.raw.nb ? 9 : 4), pointStyle: c => (c.raw && c.raw.nb ? 'rectRot' : 'circle') });
+    const ys = pts.map(p => p.value), bef = nb ? pts.filter(p => p.lot <= nb.lot).map(p => p.value) : [], aft = nb ? pts.filter(p => p.lot > nb.lot).map(p => p.value) : [];
+    const it = { name: sr.name, col, n, avg: chAvg(ys), nb: nb ? { lot: nb.lot, date: fmtDM(nb.date) } : null, nBef: bef.length, avgBef: chAvg(bef), nAft: aft.length, avgAft: chAvg(aft), current: sr.current, trendWord: 'n/a', info: '' };
+    it.delta = (it.avgBef && it.avgAft !== null) ? (it.avgAft - it.avgBef) / it.avgBef * 100 : null;
+    let info = n ? '' : 'belum ada pergantian ≥ 2 kali di rentang ini';
+    if (n >= 3) {
+      let sx = 0, sy = 0, sxy = 0, sxx = 0;
+      ys.forEach((y, x) => { sx += x; sy += y; sxy += x * y; sxx += x * x; });
+      const b = (n * sxy - sx * sy) / (n * sxx - sx * sx), a = (sy - b * sx) / n, avg = sy / n, rel = avg ? b * (n - 1) / avg : 0;
+      it.trendWord = Math.abs(rel) < 0.05 ? 'stabil' : (b > 0 ? 'naik' : 'turun');
+      info = 'tren <b>' + (it.trendWord === 'stabil' ? '▬ stabil' : b > 0 ? '▲ naik' : '▼ turun') + '</b> (' + (b >= 0 ? '+' : '') + (Math.round(b * 100) / 100) + ' per pergantian)';
+      ds.push({ label: sr.name + ' (tren)', isTrend: true, data: [{ x: pts[0].lot, y: a }, { x: pts[n - 1].lot, y: a + b * (n - 1) }], borderColor: col, borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5 });
+    } else if (n) info = 'tren butuh ≥ 3 titik';
+    if (sr.current !== '' && sr.current !== undefined) info += (info ? ' · ' : '') + 'saat ini: <b>' + sr.current + '</b> kali sejak ganti terakhir';
+    it.info = info; items.push(it);
+  });
+  return { ds, items, any, lotDates, nbs: Object.values(nbMap) };
+}
+
+function chMake(cv, prep, light) {
+  const css = getComputedStyle(document.body);
+  const tc = light ? '#222' : css.getPropertyValue('--text').trim(), gc = light ? '#ddd' : css.getPropertyValue('--border').trim();
+  const dm = chDateMap(prep.lotDates);
+  const xs = []; prep.ds.forEach(d => d.data.forEach(p => xs.push(p.x))); prep.nbs.forEach(n => xs.push(n.lot));
+  const opts = {
+    responsive: !light, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true },
+    layout: { padding: { top: 20, right: 18 } },
+    scales: {
+      x: { type: 'linear', min: Math.min(...xs) - 12, max: Math.max(...xs) + 12, title: { display: true, text: 'No LOT saat pergantian (tanggal di bawah angka)', color: tc },
+        ticks: { color: tc, precision: 0, maxTicksLimit: 10, callback: v => { const d = dm(v); return d ? [String(v), d] : String(v); } }, grid: { color: gc } },
+      y: { beginAtZero: true, grace: '8%', title: { display: true, text: 'Pemakaian sebelum diganti (kali)', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } }
+    },
+    plugins: {
+      chBrick: { nbs: prep.nbs },
+      legend: { labels: { color: tc, filter: i => !/\(tren\)$/.test(i.text) } },
+      tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y + ' kali · LOT ' + c.parsed.x + (c.raw.date ? ' · ' + c.raw.date : '') + (c.raw.nb ? ' · brick baru mulai setelah ini' : '') } }
+    }
+  };
+  if (light) { opts.animation = false; opts.devicePixelRatio = 1; }
+  return new Chart(cv, { type: 'line', data: { datasets: prep.ds }, options: opts, plugins: light ? [chBg, chBrick, chCallouts] : [chBrick, chCallouts] });
+}
+
 async function chRefresh() {
   const L = chSel.ladles, M = chSel.mats, E = chSel.elecs, st = $('ch_status');
   const wantRef = L.length && M.length;
-  if (!wantRef && !E.length) { chClear(); st.textContent = 'Pilih Ladle + Jenis Pergantian, dan/atau Elektrode untuk menampilkan grafik.'; return; }
+  if (!wantRef && !E.length) { chClear(); chLast = null; st.textContent = 'Pilih Ladle + Jenis Pergantian, dan/atau Elektrode untuk menampilkan grafik.'; return; }
   st.textContent = 'Memuat data...';
   const params = { ladles: wantRef ? L.join(',') : '', materials: wantRef ? M.join(',') : '', electrodes: E.join(',') };
   if (val('ch_filterStart')) params.startDate = val('ch_filterStart');
@@ -1687,50 +1839,63 @@ async function chRefresh() {
   try { await chLoadLib(); } catch (e) { st.textContent = 'Gagal memuat Chart.js (butuh koneksi internet).'; return; }
   chDraw(res.series);
 }
+
+const CH_HEAD = ['Ladle / Data', 'Siklus', 'Rata-rata TOTAL', 'Siklus SEBELUM', 'Rata-rata SEBELUM brick baru', 'Siklus SESUDAH', 'Rata-rata SESUDAH brick baru', 'Perubahan (sesudah vs sebelum)', 'Mulai brick baru', 'Tren'];
+function chRows(items) {
+  return items.map(it => [it.name, it.n, chF(it.avg), it.nb ? it.nBef : '-', it.nb ? chF(it.avgBef) : '-', it.nb ? it.nAft : '-', it.nb ? chF(it.avgAft) : '-',
+    it.delta === null ? '-' : (it.delta >= 0 ? '+' : '') + (Math.round(it.delta * 10) / 10) + '%', it.nb ? 'LOT ' + it.nb.lot + (it.nb.date ? ' (' + it.nb.date + ')' : '') : '-', it.trendWord]);
+}
+function chBox(cls, title, val, sub) {
+  return '<div class="stat-box ' + cls + '"><div class="lbl" style="margin:0 0 4px;font-weight:600">' + title + '</div><div class="val">' + val + '</div><div class="lbl">' + sub + '</div></div>';
+}
 function chDraw(series) {
-  chClear();
-  const css = getComputedStyle(document.body), tc = css.getPropertyValue('--text').trim(), gc = css.getPropertyValue('--border').trim();
-  const ds = [], rows = []; let any = false;
-  series.forEach((sr, i) => {
-    const col = CH_COL[i % CH_COL.length], pts = sr.points, n = pts.length;
-    if (n) any = true;
-    ds.push({ label: sr.name, data: pts.map(p => ({ x: p.lot, y: p.value, date: p.date })), borderColor: col, backgroundColor: col, tension: .25, pointRadius: 4, borderWidth: 2 });
-    let info = 'belum ada pergantian ≥ 2 kali di rentang ini';
-    if (n) {
-      const ys = pts.map(p => p.value), avg = ys.reduce((a, b) => a + b, 0) / n;
-      info = n + ' siklus · rata-rata <b>' + (Math.round(avg * 100) / 100) + '</b>';
-      if (n >= 3) {
-        let sx = 0, sy = 0, sxy = 0, sxx = 0;
-        ys.forEach((y, x) => { sx += x; sy += y; sxy += x * y; sxx += x * x; });
-        const b = (n * sxy - sx * sy) / (n * sxx - sx * sx), a = (sy - b * sx) / n, rel = avg ? b * (n - 1) / avg : 0;
-        const verdict = Math.abs(rel) < 0.05 ? '▬ stabil' : (b > 0 ? '▲ naik' : '▼ turun');
-        info += ' · tren <b>' + verdict + '</b> (' + (b >= 0 ? '+' : '') + (Math.round(b * 100) / 100) + ' per pergantian)';
-        ds.push({ label: sr.name + ' (tren)', data: [{ x: pts[0].lot, y: a }, { x: pts[n - 1].lot, y: a + b * (n - 1) }], borderColor: col, borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5 });
-      } else info += ' · tren butuh ≥ 3 titik';
-    }
-    if (sr.current !== '' && sr.current !== undefined) info += ' · saat ini: <b>' + sr.current + '</b> kali sejak ganti terakhir';
-    rows.push('<div class="ch-row"><span class="ch-dot" style="background:' + col + '"></span><div><b>' + escapeHtml(sr.name) + '</b><br><span style="color:var(--muted)">' + info + '</span></div></div>');
+  chClear(); chLast = { series };
+  const prep = chPrepare(series);
+  $('ch_status').textContent = prep.any ? '' : 'Tidak ada data pergantian (minimal 2 kali) pada pilihan/rentang tanggal ini.';
+  let html = prep.items.map(it =>
+    '<div class="ch-card"><div class="ch-row" style="margin:0"><span class="ch-dot" style="background:' + it.col + '"></span><div><b>' + escapeHtml(it.name) + '</b><br><span style="color:var(--muted)">' + (it.info || '-') + '</span></div></div>' +
+    '<div class="ch-3">' + chBox('b1', 'Rata-rata TOTAL', chF(it.avg), it.n + ' siklus') +
+    chBox('b2', 'SEBELUM brick baru', it.nb ? chF(it.avgBef) : '-', it.nb ? it.nBef + ' siklus (s/d LOT ' + it.nb.lot + ')' : 'belum ada penanda "brick baru"') +
+    chBox('b3', 'SESUDAH brick baru', it.nb ? chF(it.avgAft) : '-', it.nb ? it.nAft + ' siklus' + (it.delta === null ? '' : ' · ' + (it.delta >= 0 ? '+' : '') + (Math.round(it.delta * 10) / 10) + '%') : '-') + '</div></div>').join('');
+  html += '<div class="card" style="margin:0"><h2>Perbandingan Rata-rata Pemakaian</h2><div class="table-scroll"><table class="gridmark"><thead><tr>' + CH_HEAD.map(h => '<th>' + h + '</th>').join('') +
+    '</tr></thead><tbody>' + chRows(prep.items).map(r => '<tr>' + r.map((c, i) => i === 0 ? '<td class="rowlabel">' + escapeHtml(c) + '</td>' : '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table></div><p class="note-hint">SEBELUM = siklus yang berakhir pada/ sebelum pergantian brick baru. SESUDAH = siklus berikutnya (memakai brick baru). Mengikuti rentang tanggal yang dipilih.</p></div>';
+  $('ch_summary').innerHTML = html;
+  if (prep.any) chObj = chMake($('ch_canvas'), prep, false);
+}
+
+/* --- Export PDF (grafik versi terang + tabel perbandingan) --- */
+async function chExportPDF() {
+  if (!chLast || !chLast.series.length) { toast('Tampilkan grafik dulu', 'err'); return; }
+  const prep = chPrepare(chLast.series); if (!prep.any) { toast('Belum ada data untuk diexport', 'err'); return; }
+  try { await Promise.all([chLoadLib(), chLoadPdf()]); } catch (e) { toast('Gagal memuat library PDF (butuh internet)', 'err'); return; }
+  const cv = document.createElement('canvas'); cv.width = 1400; cv.height = 720;
+  cv.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;height:720px'; document.body.appendChild(cv);
+  const ch = chMake(cv, prep, true); const img = cv.toDataURL('image/jpeg', 0.95); ch.destroy(); cv.remove();
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const now = new Date(), p2 = n => (n < 10 ? '0' + n : n);
+  doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.text('Grafik Pemakaian Ladle Furnace - PT CERIA METALINDO PRIMA', 10, 12);
+  doc.setFont(undefined, 'normal'); doc.setFontSize(8.5);
+  doc.text('Dibuat: ' + p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + p2(now.getHours()) + ':' + p2(now.getMinutes()) +
+    '   |   Rentang tanggal: ' + (val('ch_filterStart') || 'awal data') + ' s/d ' + (val('ch_filterEnd') || 'hari ini'), 10, 18);
+  doc.addImage(img, 'JPEG', 10, 22, 277, 142);
+  doc.setFontSize(8); doc.text('Angka pada titik = jumlah pemakaian LF sebelum pergantian. Garis tegak = awal brick baru (dari Note Khusus). Garis putus-putus = tren.', 10, 170);
+  doc.addPage(); doc.setFont(undefined, 'bold'); doc.setFontSize(12); doc.text('Perbandingan Rata-rata Pemakaian', 10, 14);
+  const w = [62, 14, 22, 14, 26, 14, 26, 22, 40, 37], tot = w.reduce((a, b) => a + b, 0); let y = 20, x = 10;
+  doc.setFontSize(7.5); doc.setFillColor(230, 230, 230); doc.rect(10, y, tot, 11, 'F');
+  CH_HEAD.forEach((h, i) => { doc.text(doc.splitTextToSize(h, w[i] - 2), x + 1, y + 4); x += w[i]; });
+  y += 11; doc.setFont(undefined, 'normal'); doc.setDrawColor(200);
+  chRows(prep.items).forEach(r => {
+    if (y + 7 > 200) { doc.addPage(); y = 15; }
+    x = 10; r.forEach((c, i) => { doc.text(doc.splitTextToSize(String(c), w[i] - 2)[0], x + 1, y + 4.5); x += w[i]; });
+    doc.line(10, y + 7, 10 + tot, y + 7); y += 7;
   });
-  $('ch_status').textContent = any ? '' : 'Tidak ada data pergantian (minimal 2 kali) pada pilihan/rentang tanggal ini.';
-  $('ch_summary').innerHTML = rows.join('');
-  if (!any) return;
-  chObj = new Chart($('ch_canvas'), {
-    type: 'line', data: { datasets: ds },
-    options: {
-      responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true },
-      scales: {
-        x: { type: 'linear', title: { display: true, text: 'No LOT saat pergantian', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } },
-        y: { beginAtZero: true, title: { display: true, text: 'Pemakaian sebelum diganti (kali)', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } }
-      },
-      plugins: {
-        legend: { labels: { color: tc, filter: i => !/\(tren\)$/.test(i.text) } },
-        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y + ' kali · LOT ' + c.parsed.x + (c.raw.date ? ' · ' + c.raw.date : '') } }
-      }
-    }
-  });
+  doc.setFontSize(7.5); doc.text('SEBELUM = siklus yang berakhir pada/sebelum pergantian brick baru; SESUDAH = siklus berikutnya (memakai brick baru).', 10, y + 6);
+  doc.save('Grafik_Pemakaian_' + now.getFullYear() + p2(now.getMonth() + 1) + p2(now.getDate()) + '.pdf');
 }
 
 /* ---------- inisialisasi ---------- */
+(function(){const lf=$('r_ladleNo').closest('.field'),br=$('blockRefractory');lf.style.marginTop='0';lf.style.marginBottom='12px';br.insertBefore(lf,br.firstChild);})();
 buildGroupedStats();
 ['lr_', 'g_', 'e_', 'eg_', 'ch_'].forEach(makeRuler);
 </script>
