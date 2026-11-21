@@ -1459,6 +1459,42 @@ function renderAvailTable(data) {
 </style>
 
 <script>
+<!-- =====================================================================
+ TEMPEL SELURUH ISI FILE INI di file HTML Anda, TEPAT SEBELUM baris </body>
+ (sesudah </script> yang lama). Tidak ada kode lama yang dihapus/diubah.
+ ===================================================================== -->
+<style>
+.sg{--c:var(--accent);border:1px solid var(--border);border-left:5px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--panel)}
+.sg-now{--c:var(--accent)}.sg-rel{--c:var(--yellow)}.sg-all{--c:var(--muted)}
+.sg-h{font-size:13px;font-weight:700;color:var(--c)}
+.sg-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.stat-grid.grouped{display:grid;grid-template-columns:1fr;gap:12px}
+.ruler{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.rl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:600}
+.rl-top .rl-sp{flex:1}
+.rl-pre{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:14px;padding:3px 10px;font-size:11.5px;cursor:pointer}
+.rl-pre:hover{border-color:var(--accent)}
+.rl-track{position:relative;height:28px;margin-top:8px}
+.rl-track:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--border)}
+.rl-fill{position:absolute;top:12px;height:4px;border-radius:2px;background:var(--accent)}
+.rl-track input{position:absolute;left:0;top:0;width:100%;height:28px;margin:0;padding:0;background:none;border:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.rl-track input::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-webkit-slider-runnable-track,.rl-track input::-moz-range-track{background:none}
+.rl-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:2px}
+.ref-banner{padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent2)}
+.ch-row{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13px}
+.ch-dot{width:12px;height:12px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.chip.sm{padding:6px 14px;font-size:12.5px}
+.ch-card{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--panel)}
+.ch-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.ch-3 .stat-box{text-align:left}.ch-3 .b1{border-left:4px solid var(--muted)}.ch-3 .b2{border-left:4px solid #4da3ff}.ch-3 .b3{border-left:4px solid var(--accent)}
+@media(max-width:600px){.ch-3{grid-template-columns:1fr}}
+.ch-tbl th{white-space:normal;line-height:1.25;min-width:66px;max-width:120px;vertical-align:middle}
+.ch-tbl td{white-space:normal}.ch-tbl td.rowlabel{white-space:nowrap}
+</style>
+
+<script>
 /* ============ PATCH v2: stat terpisah, ruler tanggal, password sesi, cicil refractory, grafik ============ */
 const $ = id => document.getElementById(id);
 const RULER_MIN = new Date(2025, 0, 1);   // <- awal rentang slider tanggal (ubah bila data Anda lebih lama)
@@ -1652,6 +1688,7 @@ document.querySelector('.wrap').insertAdjacentHTML('beforeend',
   '<div class="field"><label>Dari Tanggal</label><input type="date" id="ch_filterStart"></div>' +
   '<div class="field"><label>Sampai Tanggal</label><input type="date" id="ch_filterEnd"></div></div></div>' +
   '<div class="card"><h2>Grafik</h2><div class="btn-row" style="margin:0 0 8px"><button type="button" class="btn btn-secondary" style="flex:0 0 auto;min-width:0" onclick="chExportPDF()">⬇ Export PDF</button></div>' +
+  '<div class="chip-row" id="ch_opts" style="margin:0 0 8px"></div>' +
   '<div class="note-hint" id="ch_status"></div>' +
   '<div style="position:relative;height:380px;margin-top:8px"><canvas id="ch_canvas"></canvas></div><div id="ch_summary" style="margin-top:14px"></div></div></section>');
 document.querySelector('#screen-menu .menu-grid').insertAdjacentHTML('beforeend',
@@ -1670,6 +1707,11 @@ chChips('ch_ladles', 'ladles', [1, 2, 3, 4, 5, 6, 7, 8].map(String));
 chChips('ch_mats', 'mats', REF_TYPES);
 chChips('ch_elecs', 'elecs', ['A', 'B', 'C'], v => 'Elektrode ' + v);
 let chTimer = null, chObj = null, chLast = null;
+[['nums', 'Angka callout'], ['brick', 'Penanda brick baru'], ['trend', 'Garis tren']].forEach(([k, t]) => {
+  const c = document.createElement('div'); c.className = 'chip sm selected'; c.textContent = t;
+  c.onclick = () => { chOpt[k] = !chOpt[k]; c.classList.toggle('selected'); if (chLast) chDraw(chLast.series); };
+  $('ch_opts').appendChild(c);
+});
 function chSchedule() { clearTimeout(chTimer); chTimer = setTimeout(chRefresh, 400); }
 ['ch_filterStart', 'ch_filterEnd'].forEach(id => $(id).addEventListener('change', chSchedule));
 const CH_COL = ['#fd7b41', '#4da3ff', '#3ecf8e', '#ffc94d', '#c77dff', '#ff5d8f', '#2ec4b6', '#a0a4a8', '#e07a5f', '#81b29a', '#f2cc8f', '#6d6875'];
@@ -1681,49 +1723,47 @@ const chLoadLib = () => chLoadScript('https://cdnjs.cloudflare.com/ajax/libs/Cha
 const chLoadPdf = () => chLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', () => window.jspdf);
 function chClear() { if (chObj) { chObj.destroy(); chObj = null; } $('ch_summary').innerHTML = ''; }
 
-/* --- plugin: garis tegak "brick baru" --- */
-const chBg = { id: 'chBg', beforeDraw(c) { c.ctx.save(); c.ctx.fillStyle = '#fff'; c.ctx.fillRect(0, 0, c.width, c.height); c.ctx.restore(); } };
-const chBrick = {
-  id: 'chBrick',
-  afterDatasetsDraw(chart, args, opt) {
-    const nbs = (opt && opt.nbs) || []; if (!nbs.length) return;
-    const x = chart.scales.x, a = chart.chartArea, ctx = chart.ctx; let k = 0;
-    ctx.save(); ctx.font = 'bold 10.5px sans-serif'; ctx.textBaseline = 'middle';
-    nbs.forEach(n => {
-      if (n.lot < x.min || n.lot > x.max) return;
-      const px = x.getPixelForValue(n.lot);
-      ctx.strokeStyle = n.col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
-      const txt = 'Brick baru ' + n.label + ' (LOT ' + n.lot + ')', w = ctx.measureText(txt).width + 10, y = a.top + 10 + (k++ % 5) * 17;
-      let bx = px + 4; if (bx + w > a.right) bx = px - 4 - w;
-      ctx.fillStyle = n.col; ctx.fillRect(bx, y - 8, w, 16); ctx.fillStyle = '#111'; ctx.fillText(txt, bx + 5, y);
-    });
-    ctx.restore();
-  }
-};
-/* --- plugin: angka callout + garis penunjuk, posisi menyesuaikan agar tidak bertumpuk --- */
+/* --- plugin: angka callout + penanda brick baru (posisi menyesuaikan agar tidak bertumpuk) --- */
+const chOpt = { nums: true, brick: true, trend: true };
+const chBg = { id: 'chBg', beforeDraw(c, a, o) { c.ctx.save(); c.ctx.fillStyle = (o && o.color) || '#fff'; c.ctx.fillRect(0, 0, c.width, c.height); c.ctx.restore(); } };
 const chCallouts = {
   id: 'chCallouts',
-  afterDatasetsDraw(chart) {
+  afterDatasetsDraw(chart, args, o) {
+    o = o || {};
+    const nums = o.nums !== false, brick = o.brick !== false, fs = o.fs || 11, tc = o.tc || '#fff', bg = o.bg || '#222';
     const ctx = chart.ctx, a = chart.chartArea, placed = [], pts = [];
     const hit = (p, q) => p.x < q.x + q.w && p.x + p.w > q.x && p.y < q.y + q.h && p.y + p.h > q.y;
     chart.data.datasets.forEach((ds, di) => {
       if (ds.isTrend || !chart.isDatasetVisible(di)) return;
-      chart.getDatasetMeta(di).data.forEach((el, i) => { pts.push({ x: el.x, y: el.y, v: ds.data[i].y, col: ds.col }); placed.push({ x: el.x - 6, y: el.y - 6, w: 12, h: 12 }); });
+      chart.getDatasetMeta(di).data.forEach((el, i) => {
+        const d = ds.data[i];
+        pts.push({ x: el.x, y: el.y, v: d.y, nb: d.nb, col: ds.col, ladle: ds.ladle });
+        placed.push({ x: el.x - 7, y: el.y - 7, w: 14, h: 14 });
+      });
     });
-    ctx.save(); ctx.font = 'bold 11px sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-    const cands = [[0, -20], [0, 20], [24, -12], [-24, -12], [24, 12], [-24, 12], [0, -36], [0, 36], [40, 0], [-40, 0], [30, -30], [-30, -30], [30, 30], [-30, 30]];
-    pts.forEach(p => {
-      const txt = String(p.v), w = ctx.measureText(txt).width + 10, h = 16; let box = null;
+    const place = (p, w, h, cands) => {
       for (const [dx, dy] of cands) {
         const b = { x: Math.min(a.right - w, Math.max(a.left, p.x + dx - w / 2)), y: Math.min(a.bottom - h, Math.max(a.top, p.y + dy - h / 2)), w, h };
-        if (!placed.some(q => hit(b, q))) { box = b; break; }
+        if (!placed.some(q => hit(b, q))) { placed.push(b); return b; }
       }
-      if (!box) box = { x: Math.min(a.right - w, Math.max(a.left, p.x - w / 2)), y: Math.max(a.top, p.y - 22 - h / 2), w, h };
-      placed.push(box);
-      const lx = Math.max(box.x, Math.min(p.x, box.x + w)), ly = Math.max(box.y, Math.min(p.y, box.y + h));
-      ctx.strokeStyle = p.col; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lx, ly); ctx.stroke();
-      ctx.fillStyle = p.col; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(box.x, box.y, w, h, 4); else ctx.rect(box.x, box.y, w, h); ctx.fill();
-      ctx.fillStyle = '#111'; ctx.fillText(txt, box.x + w / 2, box.y + h / 2 + 0.5);
+      const b = { x: Math.min(a.right - w, Math.max(a.left, p.x - w / 2)), y: Math.max(a.top, p.y - 22 - h / 2), w, h }; placed.push(b); return b;
+    };
+    const leader = (p, b) => {
+      const lx = Math.max(b.x, Math.min(p.x, b.x + b.w)), ly = Math.max(b.y, Math.min(p.y, b.y + b.h));
+      ctx.strokeStyle = p.col; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lx, ly); ctx.stroke();
+    };
+    const box = b => { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(b.x, b.y, b.w, b.h, 4); else ctx.rect(b.x, b.y, b.w, b.h); };
+    ctx.save(); ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = 'bold ' + fs + 'px sans-serif';
+    if (brick) pts.filter(p => p.nb).forEach(p => {
+      const txt = '◆ Brick baru L' + p.ladle, w = ctx.measureText(txt).width + 12, h = fs + 8;
+      const b = place(p, w, h, [[0, -46], [0, 46], [52, -30], [-52, -30], [52, 30], [-52, 30], [0, -68], [0, 68], [74, 0], [-74, 0]]);
+      leader(p, b); box(b); ctx.fillStyle = bg; ctx.fill(); ctx.strokeStyle = p.col; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = tc; ctx.fillText(txt, b.x + b.w / 2, b.y + b.h / 2 + 0.5);
+    });
+    if (nums) pts.forEach(p => {
+      const txt = String(p.v), w = ctx.measureText(txt).width + 10, h = fs + 5;
+      const b = place(p, w, h, [[0, -20], [0, 20], [24, -12], [-24, -12], [24, 12], [-24, 12], [0, -36], [0, 36], [40, 0], [-40, 0], [30, -30], [-30, -30], [30, 30], [-30, 30]]);
+      leader(p, b); box(b); ctx.fillStyle = p.col; ctx.fill(); ctx.fillStyle = '#111'; ctx.fillText(txt, b.x + b.w / 2, b.y + b.h / 2 + 0.5);
     });
     ctx.restore();
   }
@@ -1751,8 +1791,9 @@ function chPrepare(series) {
     const col = CH_COL[i % CH_COL.length], pts = sr.points, n = pts.length, nb = sr.nb;
     pts.forEach(p => lotDates.push([p.lot, p.date]));
     if (nb) { lotDates.push([nb.lot, nb.date]); const k = sr.ladle + '|' + nb.lot; if (!nbMap[k]) nbMap[k] = { lot: nb.lot, col, label: 'L' + sr.ladle }; }
+    if (nb && !pts.some(p => p.nb)) { const c = pts.filter(p => p.lot <= nb.lot); if (c.length) c[c.length - 1].nb = true; }
     if (n) any = true;
-    ds.push({ label: sr.name, col, data: pts.map(p => ({ x: p.lot, y: p.value, date: p.date, nb: p.nb })), borderColor: col, backgroundColor: col, tension: .25, borderWidth: 2,
+    ds.push({ label: sr.name, col, ladle: sr.ladle, data: pts.map(p => ({ x: p.lot, y: p.value, date: p.date, nb: p.nb })), borderColor: col, backgroundColor: col, tension: .25, borderWidth: 2,
       pointRadius: c => (c.raw && c.raw.nb ? 9 : 4), pointStyle: c => (c.raw && c.raw.nb ? 'rectRot' : 'circle') });
     const ys = pts.map(p => p.value), bef = nb ? pts.filter(p => p.lot <= nb.lot).map(p => p.value) : [], aft = nb ? pts.filter(p => p.lot > nb.lot).map(p => p.value) : [];
     const it = { name: sr.name, col, n, avg: chAvg(ys), nb: nb ? { lot: nb.lot, date: fmtDM(nb.date) } : null, nBef: bef.length, avgBef: chAvg(bef), nAft: aft.length, avgAft: chAvg(aft), current: sr.current, trendWord: 'n/a', info: '' };
@@ -1772,27 +1813,33 @@ function chPrepare(series) {
   return { ds, items, any, lotDates, nbs: Object.values(nbMap) };
 }
 
-function chMake(cv, prep, light) {
-  const css = getComputedStyle(document.body);
-  const tc = light ? '#222' : css.getPropertyValue('--text').trim(), gc = light ? '#ddd' : css.getPropertyValue('--border').trim();
+function chMake(cv, prep, pdf) {
+  const dark = document.body.getAttribute('data-theme') !== 'light';
+  const tc = dark ? '#f2f1ef' : '#222', gc = dark ? '#4a4f54' : '#ddd', bg = dark ? '#202325' : '#fff';
   const dm = chDateMap(prep.lotDates);
-  const xs = []; prep.ds.forEach(d => d.data.forEach(p => xs.push(p.x))); prep.nbs.forEach(n => xs.push(n.lot));
+  const xs = []; prep.ds.forEach(d => d.data.forEach(p => xs.push(p.x)));
+  const width = pdf ? 1400 : ((cv.parentNode && cv.parentNode.clientWidth) || 900);
+  const maxTicks = Math.max(4, Math.floor(width / 62)), rng = Math.max(...xs) - Math.min(...xs) + 24;
+  const step = [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000].find(s => Math.ceil(rng / s) <= maxTicks) || 1000;
+  const xmin = Math.floor((Math.min(...xs) - 12) / step) * step, xmax = Math.ceil((Math.max(...xs) + 12) / step) * step;
+  const fs = pdf ? 13 : 11;
   const opts = {
-    responsive: !light, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true },
+    responsive: !pdf, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true },
     layout: { padding: { top: 20, right: 18 } },
     scales: {
-      x: { type: 'linear', min: Math.min(...xs) - 12, max: Math.max(...xs) + 12, title: { display: true, text: 'No LOT saat pergantian (tanggal di bawah angka)', color: tc },
-        ticks: { color: tc, precision: 0, maxTicksLimit: 10, callback: v => { const d = dm(v); return d ? [String(v), d] : String(v); } }, grid: { color: gc } },
-      y: { beginAtZero: true, grace: '8%', title: { display: true, text: 'Pemakaian sebelum diganti (kali)', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } }
+      x: { type: 'linear', min: xmin, max: xmax, title: { display: true, text: 'No LOT saat pergantian (tanggal di bawah angka)', color: tc, font: { size: fs } },
+        ticks: { color: tc, precision: 0, stepSize: step, autoSkip: false, maxRotation: 0, font: { size: fs }, callback: v => { const d = dm(v); return d ? [String(v), d] : String(v); } }, grid: { color: gc } },
+      y: { beginAtZero: true, grace: '8%', title: { display: true, text: 'Pemakaian sebelum diganti (kali)', color: tc, font: { size: fs } }, ticks: { color: tc, precision: 0, font: { size: fs } }, grid: { color: gc } }
     },
     plugins: {
-      chBrick: { nbs: prep.nbs },
-      legend: { labels: { color: tc, filter: i => !/\(tren\)$/.test(i.text) } },
+      chCallouts: { nums: chOpt.nums, brick: chOpt.brick, fs, tc, bg },
+      legend: { labels: { color: tc, font: { size: fs }, filter: i => !/\(tren\)$/.test(i.text) } },
       tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y + ' kali · LOT ' + c.parsed.x + (c.raw.date ? ' · ' + c.raw.date : '') + (c.raw.nb ? ' · brick baru mulai setelah ini' : '') } }
     }
   };
-  if (light) { opts.animation = false; opts.devicePixelRatio = 1; }
-  return new Chart(cv, { type: 'line', data: { datasets: prep.ds }, options: opts, plugins: light ? [chBg, chBrick, chCallouts] : [chBrick, chCallouts] });
+  if (pdf) { opts.animation = false; opts.devicePixelRatio = 1; opts.plugins.chBg = { color: bg }; }
+  const ds = prep.ds.filter(d => !d.isTrend || chOpt.trend);
+  return new Chart(cv, { type: 'line', data: { datasets: ds }, options: opts, plugins: pdf ? [chBg, chCallouts] : [chCallouts] });
 }
 
 async function chRefresh() {
@@ -1810,7 +1857,7 @@ async function chRefresh() {
   chDraw(res.series);
 }
 
-const CH_HEAD = ['Ladle / Data', 'Siklus', 'Rata-rata TOTAL', 'Siklus SEBELUM', 'Rata-rata SEBELUM brick baru', 'Siklus SESUDAH', 'Rata-rata SESUDAH brick baru', 'Perubahan (sesudah vs sebelum)', 'Mulai brick baru', 'Tren'];
+const CH_HEAD = ['Ladle / Data', 'Jumlah Siklus (Total)', 'Rata-rata Total', 'Jumlah Siklus Sebelum Brick Baru', 'Rata-rata Sebelum Brick Baru', 'Jumlah Siklus Sesudah Brick Baru', 'Rata-rata Sesudah Brick Baru', 'Perubahan (Sesudah vs Sebelum)', 'Brick Baru Mulai', 'Tren'];
 function chRows(items) {
   return items.map(it => [it.name, it.n, chF(it.avg), it.nb ? it.nBef : '-', it.nb ? chF(it.avgBef) : '-', it.nb ? it.nAft : '-', it.nb ? chF(it.avgAft) : '-',
     it.delta === null ? '-' : (it.delta >= 0 ? '+' : '') + (Math.round(it.delta * 10) / 10) + '%', it.nb ? 'LOT ' + it.nb.lot + (it.nb.date ? ' (' + it.nb.date + ')' : '') : '-', it.trendWord]);
@@ -1827,40 +1874,46 @@ function chDraw(series) {
     '<div class="ch-3">' + chBox('b1', 'Rata-rata TOTAL', chF(it.avg), it.n + ' siklus') +
     chBox('b2', 'SEBELUM brick baru', it.nb ? chF(it.avgBef) : '-', it.nb ? it.nBef + ' siklus (s/d LOT ' + it.nb.lot + ')' : 'belum ada penanda "brick baru"') +
     chBox('b3', 'SESUDAH brick baru', it.nb ? chF(it.avgAft) : '-', it.nb ? it.nAft + ' siklus' + (it.delta === null ? '' : ' · ' + (it.delta >= 0 ? '+' : '') + (Math.round(it.delta * 10) / 10) + '%') : '-') + '</div></div>').join('');
-  html += '<div class="card" style="margin:0"><h2>Perbandingan Rata-rata Pemakaian</h2><div class="table-scroll"><table class="gridmark"><thead><tr>' + CH_HEAD.map(h => '<th>' + h + '</th>').join('') +
+  html += '<div class="card" style="margin:0"><h2>Perbandingan Rata-rata Pemakaian</h2><p class="note-hint" style="margin:0 0 10px"><b>Siklus</b> = satu masa pemakaian dari satu pergantian sampai pergantian berikutnya; angkanya = berapa kali ladle dipakai LF dalam masa itu. <b>Sebelum brick baru</b> = siklus yang memakai brick lama (berakhir pada/sebelum LOT brick baru). <b>Sesudah brick baru</b> = siklus yang memakai brick baru.</p><div class="table-scroll"><table class="gridmark ch-tbl"><thead><tr>' + CH_HEAD.map(h => '<th>' + h + '</th>').join('') +
     '</tr></thead><tbody>' + chRows(prep.items).map(r => '<tr>' + r.map((c, i) => i === 0 ? '<td class="rowlabel">' + escapeHtml(c) + '</td>' : '<td>' + escapeHtml(c) + '</td>').join('') + '</tr>').join('') +
     '</tbody></table></div><p class="note-hint">SEBELUM = siklus yang berakhir pada/ sebelum pergantian brick baru. SESUDAH = siklus berikutnya (memakai brick baru). Mengikuti rentang tanggal yang dipilih.</p></div>';
   $('ch_summary').innerHTML = html;
   if (prep.any) chObj = chMake($('ch_canvas'), prep, false);
 }
 
-/* --- Export PDF (grafik versi terang + tabel perbandingan) --- */
+/* --- Export PDF (mengikuti mode gelap/terang yang sedang aktif) --- */
 async function chExportPDF() {
   if (!chLast || !chLast.series.length) { toast('Tampilkan grafik dulu', 'err'); return; }
   const prep = chPrepare(chLast.series); if (!prep.any) { toast('Belum ada data untuk diexport', 'err'); return; }
   try { await Promise.all([chLoadLib(), chLoadPdf()]); } catch (e) { toast('Gagal memuat library PDF (butuh internet)', 'err'); return; }
+  const dark = document.body.getAttribute('data-theme') !== 'light';
   const cv = document.createElement('canvas'); cv.width = 1400; cv.height = 720;
   cv.style.cssText = 'position:fixed;left:-9999px;top:0;width:1400px;height:720px'; document.body.appendChild(cv);
   const ch = chMake(cv, prep, true); const img = cv.toDataURL('image/jpeg', 0.95); ch.destroy(); cv.remove();
   const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const now = new Date(), p2 = n => (n < 10 ? '0' + n : n);
+  const page = () => { if (dark) { doc.setFillColor(32, 35, 37); doc.rect(0, 0, 297, 210, 'F'); doc.setTextColor(242, 241, 239); } else doc.setTextColor(20, 20, 20); };
+  page();
   doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.text('Grafik Pemakaian Ladle Furnace - PT CERIA METALINDO PRIMA', 10, 12);
   doc.setFont(undefined, 'normal'); doc.setFontSize(8.5);
   doc.text('Dibuat: ' + p2(now.getDate()) + '/' + p2(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + p2(now.getHours()) + ':' + p2(now.getMinutes()) +
     '   |   Rentang tanggal: ' + (val('ch_filterStart') || 'awal data') + ' s/d ' + (val('ch_filterEnd') || 'hari ini'), 10, 18);
   doc.addImage(img, 'JPEG', 10, 22, 277, 142);
-  doc.setFontSize(8); doc.text('Angka pada titik = jumlah pemakaian LF sebelum pergantian. Garis tegak = awal brick baru (dari Note Khusus). Garis putus-putus = tren.', 10, 170);
-  doc.addPage(); doc.setFont(undefined, 'bold'); doc.setFontSize(12); doc.text('Perbandingan Rata-rata Pemakaian', 10, 14);
-  const w = [62, 14, 22, 14, 26, 14, 26, 22, 40, 37], tot = w.reduce((a, b) => a + b, 0); let y = 20, x = 10;
-  doc.setFontSize(7.5); doc.setFillColor(230, 230, 230); doc.rect(10, y, tot, 11, 'F');
-  CH_HEAD.forEach((h, i) => { doc.text(doc.splitTextToSize(h, w[i] - 2), x + 1, y + 4); x += w[i]; });
-  y += 11; doc.setFont(undefined, 'normal'); doc.setDrawColor(200);
+  doc.setFontSize(8);
+  doc.text('Angka pada titik = jumlah pemakaian LF sebelum pergantian. "Brick baru" = titik mulai penggunaan brick baru (dari Note Khusus). Garis putus-putus = tren.', 10, 170);
+  doc.addPage(); page(); doc.setFont(undefined, 'bold'); doc.setFontSize(12); doc.text('Perbandingan Rata-rata Pemakaian', 10, 14);
+  const w = [58, 16, 20, 22, 24, 22, 24, 22, 38, 31], tot = w.reduce((a, b) => a + b, 0); let y = 20, x = 10;
+  doc.setFontSize(7.5); dark ? doc.setFillColor(56, 60, 64) : doc.setFillColor(230, 230, 230); doc.rect(10, y, tot, 14, 'F');
+  CH_HEAD.forEach((t, i) => { doc.text(doc.splitTextToSize(t, w[i] - 2), x + 1, y + 4); x += w[i]; });
+  y += 14; doc.setFont(undefined, 'normal'); dark ? doc.setDrawColor(74, 79, 84) : doc.setDrawColor(200);
   chRows(prep.items).forEach(r => {
-    if (y + 7 > 200) { doc.addPage(); y = 15; }
+    if (y + 7 > 200) { doc.addPage(); page(); dark ? doc.setDrawColor(74, 79, 84) : doc.setDrawColor(200); doc.setFontSize(7.5); y = 15; }
     x = 10; r.forEach((c, i) => { doc.text(doc.splitTextToSize(String(c), w[i] - 2)[0], x + 1, y + 4.5); x += w[i]; });
     doc.line(10, y + 7, 10 + tot, y + 7); y += 7;
   });
-  doc.setFontSize(7.5); doc.text('SEBELUM = siklus yang berakhir pada/sebelum pergantian brick baru; SESUDAH = siklus berikutnya (memakai brick baru).', 10, y + 6);
+  doc.setFontSize(7.5);
+  doc.text('Siklus = satu masa pemakaian dari satu pergantian sampai pergantian berikutnya (angka = berapa kali ladle dipakai LF).', 10, y + 6);
+  doc.text('Sebelum brick baru = siklus yang memakai brick lama (berakhir pada/sebelum LOT brick baru). Sesudah brick baru = siklus yang memakai brick baru.', 10, y + 11);
   doc.save('Grafik_Pemakaian_' + now.getFullYear() + p2(now.getMonth() + 1) + p2(now.getDate()) + '.pdf');
 }
 
