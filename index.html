@@ -1425,5 +1425,314 @@ function renderAvailTable(data) {
     '</div></div>';
 }
 </script>
+  <!-- =====================================================================
+ TEMPEL SELURUH ISI FILE INI di file HTML Anda, TEPAT SEBELUM baris </body>
+ (sesudah </script> yang lama). Tidak ada kode lama yang dihapus/diubah.
+ ===================================================================== -->
+<style>
+.sg{--c:var(--accent);border:1px solid var(--border);border-left:5px solid var(--c);border-radius:12px;padding:12px 14px;background:var(--panel)}
+.sg-now{--c:var(--accent)}.sg-rel{--c:var(--yellow)}.sg-all{--c:var(--muted)}
+.sg-h{font-size:13px;font-weight:700;color:var(--c)}
+.sg-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.stat-grid.grouped{display:grid;grid-template-columns:1fr;gap:12px}
+.ruler{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.rl-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;font-weight:600}
+.rl-top .rl-sp{flex:1}
+.rl-pre{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:14px;padding:3px 10px;font-size:11.5px;cursor:pointer}
+.rl-pre:hover{border-color:var(--accent)}
+.rl-track{position:relative;height:28px;margin-top:8px}
+.rl-track:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--border)}
+.rl-fill{position:absolute;top:12px;height:4px;border-radius:2px;background:var(--accent)}
+.rl-track input{position:absolute;left:0;top:0;width:100%;height:28px;margin:0;padding:0;background:none;border:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.rl-track input::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);cursor:pointer}
+.rl-track input::-webkit-slider-runnable-track,.rl-track input::-moz-range-track{background:none}
+.rl-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:2px}
+.ref-banner{padding:10px 14px;border-radius:10px;font-size:12.5px;margin-bottom:14px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent2)}
+.ch-row{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13px}
+.ch-dot{width:12px;height:12px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.chip.sm{padding:6px 14px;font-size:12.5px}
+</style>
+
+<script>
+/* ============ PATCH v2: stat terpisah, ruler tanggal, password sesi, cicil refractory, grafik ============ */
+const $ = id => document.getElementById(id);
+const RULER_MIN = new Date(2025, 0, 1);   // <- awal rentang slider tanggal (ubah bila data Anda lebih lama)
+const DAY_MS = 86400000;
+
+/* ---------- 1. Statistik dipisah per kelompok (ID elemen tetap sama, jadi fungsi lama tetap jalan) ---------- */
+function sgGroup(cls, title, zh, boxes) {
+  return '<div class="sg ' + cls + '"><div class="sg-h">' + title + '<span class="zh">' + zh + '</span></div><div class="sg-b">' +
+    boxes.map(b => '<div class="stat-box"><div class="val" id="' + b[0] + '">-</div><div class="lbl">' + b[1] + '<span class="zh">' + b[2] + '</span></div></div>').join('') +
+    '</div></div>';
+}
+const G_NOW = (t, z) => [t, z];
+function buildGroupedStats() {
+  const conf = {
+    ladleRefractoryStats: [
+      ['sg-now', '① Kondisi Saat Ini', '当前状态（自上次更换）', [['lr_usageSinceLast', 'Pemakaian sejak terakhir ganti', '上次更换后的使用次数'], ['lr_usagePrevCycle', 'Pemakaian di cycle sebelum diganti', '更换前一周期的使用次数'], ['lr_lastLot', 'LOT terakhir ganti', '最后更换批号(LOT)']]],
+      ['sg-rel', '② Sejak Relining Total Terakhir', '自上次整体翻新以来', [['lr_totalChangesSinceRelining', 'Total pergantian', '更换总次数'], ['lr_avgUsageSinceRelining', 'Rata-rata pemakaian / ganti', '平均使用次数/更换']]],
+      ['sg-all', '③ Keseluruhan (sejak awal data)', '全部（自数据开始）', [['lr_totalChanges', 'Total pergantian', '更换总次数'], ['lr_avgUsage', 'Rata-rata pemakaian / ganti', '平均使用次数/更换']]]
+    ],
+    globalRefractoryStats: [
+      ['sg-now', '① Terakhir Diganti', '最近一次更换', [['g_lastLot', 'LOT terakhir ganti (semua ladle)', '最后批号(LOT)（所有钢包）']]],
+      ['sg-rel', '② Sejak Relining Total Terakhir (per ladle)', '自上次整体翻新以来', [['g_totalChangesSinceRelining', 'Total pergantian (semua ladle)', '更换总次数'], ['g_avgUsageSinceRelining', 'Rata-rata pemakaian / ganti', '平均使用次数/更换']]],
+      ['sg-all', '③ Keseluruhan (sejak awal data)', '全部（自数据开始）', [['g_totalChanges', 'Total pergantian (semua ladle)', '更换总次数'], ['g_avgUsage', 'Rata-rata pemakaian / ganti', '平均使用次数/更换']]]
+    ],
+    electrodeStats: [
+      ['sg-now', '① Kondisi Saat Ini', '当前状态（自上次更换）', [['e_usageSinceLast', 'Pemakaian sejak terakhir ganti', '上次更换后的使用次数'], ['e_usagePrevCycle', 'Pemakaian di cycle sebelum diganti', '更换前一周期的使用次数'], ['e_lastLot', 'LOT terakhir ganti', '最后更换批号(LOT)']]],
+      ['sg-all', '② Keseluruhan (mengikuti filter)', '全部（按筛选）', [['e_totalChanges', 'Total pergantian', '更换总次数'], ['e_avgUsage', 'Rata-rata pemakaian / ganti', '平均使用次数/更换']]]
+    ]
+  };
+  for (const id in conf) {
+    const el = $(id); if (!el) continue;
+    el.classList.add('grouped');
+    el.innerHTML = conf[id].map(g => sgGroup(g[0], g[1], g[2], g[3])).join('');
+  }
+}
+
+/* ---------- 2. Ruler (slider rentang) untuk filter tanggal ---------- */
+const isoD = d => { const p = n => (n < 10 ? '0' + n : n); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); };
+const fmtD = d => d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+function makeRuler(p) {
+  const s = $(p + 'filterStart'), e = $(p + 'filterEnd');
+  if (!s || !e || s.dataset.ruler) return;
+  s.dataset.ruler = 1;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const total = Math.max(1, Math.round((today - RULER_MIN) / DAY_MS));
+  const host = document.createElement('div'); host.className = 'ruler';
+  host.innerHTML = '<div class="rl-top"><span>📅</span><span class="rl-a"></span><span>→</span><span class="rl-b"></span><span class="rl-sp"></span>' +
+    '<button type="button" class="rl-pre" data-d="30">30 hari</button><button type="button" class="rl-pre" data-d="90">90 hari</button>' +
+    '<button type="button" class="rl-pre" data-d="365">1 tahun</button><button type="button" class="rl-pre" data-d="0">Semua</button></div>' +
+    '<div class="rl-track"><div class="rl-fill"></div><input type="range" class="rl-min" min="0" max="' + total + '" value="0"><input type="range" class="rl-max" min="0" max="' + total + '" value="' + total + '"></div>' +
+    '<div class="rl-scale"><span>' + fmtD(RULER_MIN) + '</span><span>Hari ini</span></div>';
+  const grid = s.closest('.grid'); grid.parentNode.insertBefore(host, grid.nextSibling);
+  const mn = host.querySelector('.rl-min'), mx = host.querySelector('.rl-max'), fill = host.querySelector('.rl-fill');
+  const la = host.querySelector('.rl-a'), lb = host.querySelector('.rl-b');
+  const dAt = i => new Date(RULER_MIN.getTime() + i * DAY_MS);
+  let t = null;
+  function paint() {
+    const a = +mn.value, b = +mx.value;
+    fill.style.left = (a / total * 100) + '%'; fill.style.width = ((b - a) / total * 100) + '%';
+    la.textContent = a === 0 ? 'Awal data' : fmtD(dAt(a)); lb.textContent = b === total ? 'Hari ini' : fmtD(dAt(b));
+  }
+  function push() {
+    s.value = +mn.value === 0 ? '' : isoD(dAt(+mn.value));
+    e.value = +mx.value === total ? '' : isoD(dAt(+mx.value));
+    paint(); clearTimeout(t);
+    t = setTimeout(() => s.dispatchEvent(new Event('change', { bubbles: true })), 350);
+  }
+  mn.addEventListener('input', () => { if (+mn.value > +mx.value) mn.value = mx.value; push(); });
+  mx.addEventListener('input', () => { if (+mx.value < +mn.value) mx.value = mn.value; push(); });
+  host.querySelectorAll('.rl-pre').forEach(b => b.onclick = () => {
+    const d = +b.dataset.d; mn.value = d ? Math.max(0, total - d) : 0; mx.value = total; push();
+  });
+  function sync() {
+    const idx = v => Math.min(total, Math.max(0, Math.round((new Date(v + 'T00:00:00') - RULER_MIN) / DAY_MS)));
+    mn.value = s.value ? idx(s.value) : 0; mx.value = e.value ? idx(e.value) : total; paint();
+  }
+  s.addEventListener('change', sync); e.addEventListener('change', sync);
+  paint();
+}
+
+/* ---------- 3. Password sesi (tidak minta ulang selama masih di panel input) ---------- */
+let refAuthed = false, editUnlocked = false;
+const __render = render;
+render = function (id, isBack) {
+  if (id !== 'lf-form') editUnlocked = false;
+  if (id === 'refractory-password' && refAuthed) {
+    if (isBack) { history.pop(); id = 'menu'; }
+    else { history[history.length - 1] = 'refractory-form'; resetRefractoryForm(); id = 'refractory-form'; }
+  }
+  if (id === 'refractory-form') refAuthed = true; else if (id !== 'refractory-password') refAuthed = false;
+  if (id === 'chart') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $('screen-chart').classList.add('active');
+    $('btnBack').style.display = 'flex';
+    $('screenTitle').textContent = 'Grafik Pemakaian / 使用次数图表';
+    $('screenSub').textContent = 'Naik/turun pemakaian per ladle, refractory & elektrode';
+    chRefresh();
+    return;
+  }
+  __render(id, isBack);
+};
+const __askPwd = askEditPasswordConfirm;
+askEditPasswordConfirm = function (lot) {
+  if (editUnlocked) return Promise.resolve(true);
+  return __askPwd(lot).then(ok => { if (ok) editUnlocked = true; return ok; });
+};
+
+/* ---------- 4. Input perbaikan: bisa dicicil & diedit ulang ---------- */
+let refLoadedKey = '', refExisting = false, refTimer = null;
+const REF_TYPES = ['Permeable Brick', 'Permeable Seat', 'Slag Relining', 'Side Wall Relining', 'Bottom Relining', 'Relining Total'];
+function normType(d) {
+  let s = String(d).trim().toLowerCase().replace(/^pergantian\s+/, '');
+  if (s === 'permeable seat brick') s = 'permeable seat';
+  return REF_TYPES.find(t => t.toLowerCase() === s) || null;
+}
+function refKey() { return [val('r_lastLot').trim(), selectedJenis, selectedJenis === 'Refractory' ? val('r_ladleNo').trim() : ''].join('|'); }
+function showRefBanner(mode, tgl) {
+  let b = $('refBanner');
+  if (!b) { b = document.createElement('div'); b.id = 'refBanner'; b.className = 'ref-banner'; const f = $('screen-refractory-form'); f.insertBefore(b, f.firstChild); }
+  const msg = {
+    new: '🆕 Data baru. Boleh diisi sebagian dulu lalu simpan — lanjutkan nanti dengan mengetik No LOT (dan No Ladle) yang sama, data akan muncul otomatis.',
+    found: '✏️ Data tersimpan ditemukan' + (tgl ? ' (tanggal ' + tgl + ')' : '') + '. Lengkapi / ubah lalu simpan — akan ada konfirmasi sebelum menimpa.',
+    saved: '✅ Tersimpan. Masih bisa diedit lagi, atau tekan "Input Baru" untuk perbaikan lain.'
+  }[mode];
+  b.style.display = msg ? 'block' : 'none'; b.textContent = msg || '';
+}
+function clearRefDetails() {
+  selectedElectrodes = []; selectedRefractoryTypes = [];
+  document.querySelectorAll('.elec-chip,.refr-chip').forEach(c => c.classList.remove('selected'));
+  setVal('r_note', ''); setVal('r_noteKhusus', '');
+}
+function applyRefDetails(details) {
+  clearRefDetails();
+  (details || []).forEach(d => {
+    if (selectedJenis === 'Elektrode') { const x = String(d).trim().toUpperCase(); if (['A', 'B', 'C'].includes(x)) toggleElectrode(x); }
+    else { const t = normType(d); if (t) toggleRefractoryType(t); }
+  });
+}
+function scheduleRefLookup() { clearTimeout(refTimer); refTimer = setTimeout(refLookup, 600); }
+async function refLookup() {
+  const lot = val('r_lastLot').trim(); if (!lot || !selectedJenis) return;
+  const ladle = val('r_ladleNo').trim(); if (selectedJenis === 'Refractory' && !ladle) return;
+  const key = refKey(); if (key === refLoadedKey) return;
+  const res = await apiGet('getRefractoryEntry', { lot, jenis: selectedJenis, ladle });
+  if (!res || res.error || refKey() !== key) return;
+  refLoadedKey = key;
+  if (res.found) {
+    setVal('r_tanggal', res.tanggal || val('r_tanggal')); applyRefDetails(res.details);
+    setVal('r_note', res.note); setVal('r_noteKhusus', res.noteKhusus);
+    refExisting = true; showRefBanner('found', res.tanggal);
+  } else {
+    if (refExisting) clearRefDetails();
+    refExisting = false; showRefBanner('new');
+  }
+}
+['r_lastLot', 'r_ladleNo'].forEach(id => $(id).addEventListener('input', scheduleRefLookup));
+const __sj = selectJenis;
+selectJenis = function (j) { __sj(j); refLoadedKey = ''; scheduleRefLookup(); };
+const __rr = resetRefractoryForm;
+resetRefractoryForm = function () { __rr(); refLoadedKey = ''; refExisting = false; showRefBanner(''); };
+submitRefractoryForm = async function () {
+  if (!selectedJenis) { toast('Pilih jenis perbaikan', 'err'); return; }
+  const lot = val('r_lastLot').trim(); if (!lot) { toast('Isi No LOT terakhir', 'err'); return; }
+  let details = [], ladleNo = '';
+  if (selectedJenis === 'Elektrode') details = selectedElectrodes.slice();
+  else { ladleNo = val('r_ladleNo').trim(); if (!ladleNo) { toast('Isi No Ladle', 'err'); return; } details = selectedRefractoryTypes.slice(); }
+  if (refLoadedKey !== refKey()) await refLookup();           // pastikan data lama sudah dicek dulu
+  if (refExisting && !confirm('Data LOT ' + lot + (ladleNo ? ' / Ladle ' + ladleNo : '') + ' sudah tersimpan.\n\nYakin ingin mengganti dengan isian saat ini?')) return;
+  const res = await apiPost({ action: 'saveRefractory', replace: true, tanggal: val('r_tanggal'), lastLot: lot, jenis: selectedJenis, details, ladleNo, note: val('r_note'), noteKhusus: val('r_noteKhusus') });
+  if (res && res.ok) {
+    refLoadedKey = refKey(); refExisting = true; showRefBanner('saved');
+    toast(details.length ? 'Perbaikan tersimpan' : 'Tersimpan (belum ada item dipilih)', 'ok');
+  } else if (res && res.error) toast('Error: ' + res.error, 'err');
+};
+(function () {
+  const row = document.querySelector('#screen-refractory-form .btn-row'); if (!row) return;
+  row.querySelector('.btn-primary').textContent = 'Simpan / Update Laporan';
+  const b = document.createElement('button'); b.className = 'btn btn-secondary'; b.type = 'button'; b.textContent = 'Input Baru';
+  b.onclick = () => resetRefractoryForm(); row.appendChild(b);
+})();
+
+/* ---------- 5. Panel Grafik Pemakaian ---------- */
+document.querySelector('.wrap').insertAdjacentHTML('beforeend',
+  '<section class="screen" id="screen-chart">' +
+  '<div class="card"><h2>1. Pilih Data <span class="zh" style="display:inline">选择数据</span></h2>' +
+  '<label>Nomor Ladle (boleh lebih dari 1)</label><div class="chip-row" id="ch_ladles"></div>' +
+  '<label style="margin-top:12px">Jenis Pergantian Refractory (boleh lebih dari 1)</label><div class="chip-row" id="ch_mats"></div>' +
+  '<label style="margin-top:12px">Elektrode (boleh lebih dari 1)</label><div class="chip-row" id="ch_elecs"></div>' +
+  '<p class="note-hint">Grafik refractory muncul jika Ladle <b>dan</b> Jenis dipilih. Setiap titik = jumlah pemakaian LF sebelum pergantian itu terjadi.</p></div>' +
+  '<div class="card"><h2>2. Rentang Tanggal <span class="zh" style="display:inline">日期范围</span></h2><div class="grid cols2">' +
+  '<div class="field"><label>Dari Tanggal</label><input type="date" id="ch_filterStart"></div>' +
+  '<div class="field"><label>Sampai Tanggal</label><input type="date" id="ch_filterEnd"></div></div></div>' +
+  '<div class="card"><h2>Grafik</h2><div class="note-hint" id="ch_status"></div>' +
+  '<div style="position:relative;height:340px;margin-top:8px"><canvas id="ch_canvas"></canvas></div><div id="ch_summary" style="margin-top:14px"></div></div></section>');
+document.querySelector('#screen-menu .menu-grid').insertAdjacentHTML('beforeend',
+  '<div class="menu-card" onclick="showScreen(\'chart\')"><div class="icon">📈</div><div><h3>Grafik Pemakaian<span class="zh">使用次数图表</span></h3><p>Lihat tren pemakaian naik/turun per ladle, refractory & elektrode<span class="zh">查看各钢包、耐火材料与电极的使用趋势</span></p></div></div>');
+
+const chSel = { ladles: [], mats: [], elecs: [] };
+function chChips(host, key, items, label) {
+  const row = $(host);
+  items.forEach(v => {
+    const c = document.createElement('div'); c.className = 'chip sm'; c.textContent = label ? label(v) : v;
+    c.onclick = () => { const a = chSel[key], i = a.indexOf(v); if (i < 0) a.push(v); else a.splice(i, 1); c.classList.toggle('selected'); chSchedule(); };
+    row.appendChild(c);
+  });
+}
+chChips('ch_ladles', 'ladles', [1, 2, 3, 4, 5, 6, 7, 8].map(String));
+chChips('ch_mats', 'mats', REF_TYPES);
+chChips('ch_elecs', 'elecs', ['A', 'B', 'C'], v => 'Elektrode ' + v);
+let chTimer = null, chObj = null;
+function chSchedule() { clearTimeout(chTimer); chTimer = setTimeout(chRefresh, 400); }
+['ch_filterStart', 'ch_filterEnd'].forEach(id => $(id).addEventListener('change', chSchedule));
+const CH_COL = ['#fd7b41', '#4da3ff', '#3ecf8e', '#ffc94d', '#c77dff', '#ff5d8f', '#2ec4b6', '#a0a4a8', '#e07a5f', '#81b29a', '#f2cc8f', '#6d6875'];
+function chLoadLib() {
+  if (window.Chart) return Promise.resolve();
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+}
+function chClear() { if (chObj) { chObj.destroy(); chObj = null; } $('ch_summary').innerHTML = ''; }
+async function chRefresh() {
+  const L = chSel.ladles, M = chSel.mats, E = chSel.elecs, st = $('ch_status');
+  const wantRef = L.length && M.length;
+  if (!wantRef && !E.length) { chClear(); st.textContent = 'Pilih Ladle + Jenis Pergantian, dan/atau Elektrode untuk menampilkan grafik.'; return; }
+  st.textContent = 'Memuat data...';
+  const params = { ladles: wantRef ? L.join(',') : '', materials: wantRef ? M.join(',') : '', electrodes: E.join(',') };
+  if (val('ch_filterStart')) params.startDate = val('ch_filterStart');
+  if (val('ch_filterEnd')) params.endDate = val('ch_filterEnd');
+  const res = await apiGet('getChartData', params);
+  if (!res) { st.textContent = ''; return; }
+  if (res.error) { st.textContent = 'Error: ' + res.error; return; }
+  try { await chLoadLib(); } catch (e) { st.textContent = 'Gagal memuat Chart.js (butuh koneksi internet).'; return; }
+  chDraw(res.series);
+}
+function chDraw(series) {
+  chClear();
+  const css = getComputedStyle(document.body), tc = css.getPropertyValue('--text').trim(), gc = css.getPropertyValue('--border').trim();
+  const ds = [], rows = []; let any = false;
+  series.forEach((sr, i) => {
+    const col = CH_COL[i % CH_COL.length], pts = sr.points, n = pts.length;
+    if (n) any = true;
+    ds.push({ label: sr.name, data: pts.map(p => ({ x: p.lot, y: p.value, date: p.date })), borderColor: col, backgroundColor: col, tension: .25, pointRadius: 4, borderWidth: 2 });
+    let info = 'belum ada pergantian ≥ 2 kali di rentang ini';
+    if (n) {
+      const ys = pts.map(p => p.value), avg = ys.reduce((a, b) => a + b, 0) / n;
+      info = n + ' siklus · rata-rata <b>' + (Math.round(avg * 100) / 100) + '</b>';
+      if (n >= 3) {
+        let sx = 0, sy = 0, sxy = 0, sxx = 0;
+        ys.forEach((y, x) => { sx += x; sy += y; sxy += x * y; sxx += x * x; });
+        const b = (n * sxy - sx * sy) / (n * sxx - sx * sx), a = (sy - b * sx) / n, rel = avg ? b * (n - 1) / avg : 0;
+        const verdict = Math.abs(rel) < 0.05 ? '▬ stabil' : (b > 0 ? '▲ naik' : '▼ turun');
+        info += ' · tren <b>' + verdict + '</b> (' + (b >= 0 ? '+' : '') + (Math.round(b * 100) / 100) + ' per pergantian)';
+        ds.push({ label: sr.name + ' (tren)', data: [{ x: pts[0].lot, y: a }, { x: pts[n - 1].lot, y: a + b * (n - 1) }], borderColor: col, borderDash: [6, 4], pointRadius: 0, borderWidth: 1.5 });
+      } else info += ' · tren butuh ≥ 3 titik';
+    }
+    if (sr.current !== '' && sr.current !== undefined) info += ' · saat ini: <b>' + sr.current + '</b> kali sejak ganti terakhir';
+    rows.push('<div class="ch-row"><span class="ch-dot" style="background:' + col + '"></span><div><b>' + escapeHtml(sr.name) + '</b><br><span style="color:var(--muted)">' + info + '</span></div></div>');
+  });
+  $('ch_status').textContent = any ? '' : 'Tidak ada data pergantian (minimal 2 kali) pada pilihan/rentang tanggal ini.';
+  $('ch_summary').innerHTML = rows.join('');
+  if (!any) return;
+  chObj = new Chart($('ch_canvas'), {
+    type: 'line', data: { datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'nearest', intersect: true },
+      scales: {
+        x: { type: 'linear', title: { display: true, text: 'No LOT saat pergantian', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } },
+        y: { beginAtZero: true, title: { display: true, text: 'Pemakaian sebelum diganti (kali)', color: tc }, ticks: { color: tc, precision: 0 }, grid: { color: gc } }
+      },
+      plugins: {
+        legend: { labels: { color: tc, filter: i => !/\(tren\)$/.test(i.text) } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y + ' kali · LOT ' + c.parsed.x + (c.raw.date ? ' · ' + c.raw.date : '') } }
+      }
+    }
+  });
+}
+
+/* ---------- inisialisasi ---------- */
+buildGroupedStats();
+['lr_', 'g_', 'e_', 'eg_', 'ch_'].forEach(makeRuler);
+</script>
 </body>
 </html>
