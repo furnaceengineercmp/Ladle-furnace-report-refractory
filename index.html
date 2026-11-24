@@ -1458,6 +1458,37 @@ function renderAvailTable(data) {
 @media(max-width:600px){.ch-3{grid-template-columns:1fr}}
 table.gridmark.ch-tbl th{white-space:normal;line-height:1.25;min-width:66px;max-width:120px;vertical-align:middle}
 table.gridmark.ch-tbl td{white-space:normal}table.gridmark.ch-tbl td.rowlabel{white-space:nowrap}
+/* ===== v3: tampilan lebih simpel & rapi ===== */
+.wrap{max-width:900px}
+.card{padding:18px 20px;border-radius:16px}
+.card h2{font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text);border-left:3px solid var(--accent);padding-left:9px;margin:0 0 14px}
+.zh{font-size:.78em;opacity:.5}
+body.zh-off .zh{display:none!important}
+.stat-grid{gap:8px 20px;margin-top:10px}
+.stat-box{background:transparent;border:0;border-radius:0;padding:4px 2px;text-align:left}
+.stat-box .val{font-size:24px;line-height:1.1;font-weight:700;color:var(--text)}
+.stat-box .lbl{font-size:11.5px;margin-top:3px;line-height:1.35}
+.stat-box.variant-refresh{border:0}.stat-box.variant-refresh .val{color:var(--text)}
+.sg{border:0;border-left:3px solid var(--c);border-radius:0;background:transparent;padding:2px 0 2px 14px}
+.sg-h{font-size:12px;letter-spacing:.2px}
+.sg-b{gap:8px 24px;margin-top:6px}
+.sg-now .val{color:var(--accent)}
+.stat-grid.grouped{gap:20px}
+.ch-3 .stat-box{background:var(--panel2);border-radius:10px;padding:10px 12px}
+#ladleLastRepair{background:var(--panel2)!important;border-radius:12px!important;padding:12px 14px!important}
+.menu-card{padding:16px 18px;border-radius:14px}
+.menu-card p{font-size:12.5px}
+.chip{padding:7px 14px}
+.ruler{background:transparent;border:0;padding:8px 0 0}
+.tabs{display:flex;gap:6px;background:var(--panel2);padding:4px;border-radius:12px;margin-bottom:14px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);padding:9px 8px;border-radius:9px;font-weight:600;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--accent);color:#241400}
+details.fb{margin-top:14px;border-top:1px dashed var(--border);padding-top:10px}
+details.fb>summary{cursor:pointer;font-size:12.5px;color:var(--muted);list-style:none;outline:none}
+details.fb>summary::-webkit-details-marker{display:none}
+details.fb>summary::before{content:"▸ "}details.fb[open]>summary::before{content:"▾ "}
+.fb-on{background:var(--accent);color:#241400;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:6px}
+.filter-bar{margin-top:0;border-top:0;padding-top:0}
 </style>
 
 <script>
@@ -1893,6 +1924,52 @@ async function chExportPDF() {
 (function(){const lf=$('r_ladleNo').closest('.field'),br=$('blockRefractory');lf.style.marginTop='0';lf.style.marginBottom='12px';br.insertBefore(lf,br.firstChild);})();
 buildGroupedStats();
 ['lr_', 'g_', 'e_', 'eg_', 'ch_'].forEach(makeRuler);
+
+/* ---------- v3: UI lebih simpel (tab, filter lipat, toggle Mandarin) + autosave aman ---------- */
+function makeTabs(screenId, labels) {
+  const sc = $(screenId); if (!sc || sc.dataset.tabs) return; sc.dataset.tabs = 1;
+  const cards = [...sc.children].filter(c => c.classList.contains('card')); if (cards.length < 2) return;
+  const bar = document.createElement('div'); bar.className = 'tabs';
+  labels.forEach((t, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.innerHTML = t;
+    b.onclick = () => { cards.forEach((c, j) => c.style.display = j === i ? '' : 'none'); [...bar.children].forEach((x, j) => x.classList.toggle('on', j === i)); };
+    bar.appendChild(b);
+  });
+  cards[0].parentNode.insertBefore(bar, cards[0]); bar.children[0].click();
+}
+const ZH = t => ' <span class="zh" style="display:inline">' + t + '</span>';
+makeTabs('screen-record-refractory', ['Per Ladle' + ZH('单个钢包'), 'Semua Ladle' + ZH('所有钢包')]);
+makeTabs('screen-record-electrode', ['Per Elektrode' + ZH('单个电极'), 'Semua Elektrode' + ZH('所有电极')]);
+
+document.querySelectorAll('.filter-bar').forEach(fb => {
+  const lab = fb.querySelector('.filter-label'); if (lab) lab.remove();
+  const d = document.createElement('details'); d.className = 'fb';
+  const sm = document.createElement('summary'); d.appendChild(sm);
+  while (fb.firstChild) d.appendChild(fb.firstChild);
+  const hint = document.createElement('p'); hint.className = 'note-hint'; hint.textContent = 'Filter memengaruhi Total Pergantian dan Rata-rata. Angka "Saat Ini" tetap real-time.'; d.appendChild(hint);
+  fb.appendChild(d);
+  const upd = () => { const on = [...d.querySelectorAll('input')].some(i => i.type !== 'range' && i.value); sm.innerHTML = '🔎 Filter tanggal & kata kunci' + (on ? '<span class="fb-on">aktif</span>' : ''); };
+  d.addEventListener('change', upd); d.addEventListener('input', upd); upd();
+});
+
+(function () {
+  let off = false; try { off = localStorage.getItem('lf_zh') === 'off'; } catch (e) {}
+  const b = document.createElement('div'); b.className = 'theme-toggle'; b.id = 'zhToggle'; b.title = 'Tampilkan / sembunyikan teks Mandarin'; b.textContent = '中';
+  const cut = () => { if (off) ['screenTitle', 'screenSub'].forEach(id => { const el = $(id); el.textContent = el.textContent.split(' / ')[0]; }); };
+  const apply = () => { document.body.classList.toggle('zh-off', off); b.style.opacity = off ? .45 : 1; try { localStorage.setItem('lf_zh', off ? 'off' : 'on'); } catch (e) {} cut(); };
+  b.onclick = () => { off = !off; apply(); if (!off) { const cur = history[history.length - 1] || 'menu'; render(cur, true); } };
+  $('themeToggle').insertAdjacentElement('beforebegin', b);
+  const __r3 = render; render = function (id, isBack) { __r3(id, isBack); cut(); };
+  apply();
+})();
+
+/* autosave draft: jangan kirim bersamaan (penyebab baris draft ganda dengan No LOT sama) */
+let asBusy = false; const __as = autosaveDraft;
+autosaveDraft = async function () {
+  if (asBusy) { clearTimeout(autosaveTimer); autosaveTimer = setTimeout(autosaveDraft, 1500); return; }
+  asBusy = true; try { await __as(); } finally { asBusy = false; }
+};
 </script>
+
 </body>
 </html>
